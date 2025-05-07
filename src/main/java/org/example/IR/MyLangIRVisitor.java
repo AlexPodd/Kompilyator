@@ -16,10 +16,12 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
 
     private ArrayList<Instructions> instructions;
     private SymbolTable table;
+    private SymbolTable globalTable;
     public MyLangIRVisitor(SymbolTable globalTable){
         instructions = new ArrayList<>();
         needLabel = new ArrayList<>();
         this.table = globalTable;
+        this.globalTable = globalTable;
     }
 
     private String newTemp() {
@@ -401,7 +403,7 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         if(ctx.function_declarations() != null){
             for (MyLangParser1.Function_declarationContext context: ctx.function_declarations().function_declaration()){
                 Instructions.setCurrFunc(context.IDENTIFIER().getText());
-                table = table.find(context.IDENTIFIER().getText()).getSymbolTable();
+                table = globalTable.find(context.IDENTIFIER().getText()).getSymbolTable();
                 visit(context);
             }
         }

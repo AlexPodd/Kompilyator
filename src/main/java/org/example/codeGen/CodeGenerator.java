@@ -369,12 +369,10 @@
                 generateLoad(var ,reg);
             }
 
-            if (reg.getName().equals("RAX")){
-                command.add("    ret");
-                return;
+            if (!reg.getName().equals("RAX")){
+                command.add("    mov RAX, " + r);
             }
 
-            command.add("    mov RAX, " + r);
             command.add("    leave");
             command.add("    ret");
         }

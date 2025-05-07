@@ -70,8 +70,5 @@ public class StackManager {
 
     public void clearTemp() {
         tempStackOffset.clear();
-        // Ничего с rsp делать не нужно!
-        // Так как мы только логически освобождаем темпы,
-        // физически стек восстанавливается через leave/ret
     }
 }
