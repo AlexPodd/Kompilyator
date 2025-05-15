@@ -207,7 +207,7 @@
 
 
             if(info.isGlobal()){
-                command.add("    mov "+var+", " + reg.getName());
+                command.add("    mov "+"["+var+"]"+", " + reg.getName());
                 info.addPlace("global");
                 return;
             }
@@ -241,7 +241,8 @@
 
 
             if(info.isGlobal()){
-                command.add("    mov "+reg.getName()+", " + var);
+
+                command.add("    mov "+reg.getNameLoad(info.getSize())+", " +"["+ var+"]");
                 info.addPlace(reg.getName());
                 reg.addVar(var);
                 reg.setHasValue(true);

@@ -74,6 +74,15 @@ public class Register {
         return name;
     }
 
+    public String getNameLoad(int size){
+        return switch (size) {
+            case 1 -> x8;
+            case 2 -> x16;
+            case 4 -> x32;
+            default -> name;
+        };
+    }
+
     public void clear(){
         contains.clear();
         hasValue = false;

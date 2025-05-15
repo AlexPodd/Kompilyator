@@ -72,7 +72,17 @@ private static ArrayList<SymbolTable> tables = new ArrayList<>();
 
     }
     private int offsetSize(TypeName type) {
-        return 8;
+        switch (type){
+            default -> {
+                return 8;
+            }
+            case INTEGER -> {
+                return 4;
+            }
+            case BOOLEAN -> {
+                return 1;
+            }
+        }
     }
 
     public SymbolInfo find(String ID) {

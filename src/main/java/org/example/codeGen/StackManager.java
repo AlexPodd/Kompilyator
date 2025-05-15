@@ -16,6 +16,9 @@ public class StackManager {
 
     public void updateStackTop(int stackTop) {
         if(this.stackTop == 0){
+            if(stackTop == 0){
+                return;
+            }
            generator.addCommand("    sub rsp, "+Math.abs(stackTop));
             this.stackTop = stackTop;
            return;
@@ -57,11 +60,24 @@ public class StackManager {
     }
 
     public String loadFromStack(SymbolInfo info, Register reg) {
-        return "    mov " + reg.getName() + ", [rbp" + offsetToText(info.getOffset()) + "]";
+        return "    mov " + reg.getNameLoad(info.getSize()) + ", "+sizeOfReg(info.getSize())+ " [rbp" + offsetToText(info.getOffset()) + "]";
+    }
+
+    private String sizeOfReg(int size){
+        switch (size){
+            case 1:
+                return "byte";
+            case 2:
+                return "word";
+            case 4:
+                return "dword";
+            default:
+                return "qword";
+        }
     }
 
     public String storeToStack(SymbolInfo info, String regName) {
-        return "    mov [rbp" + offsetToText(info.getOffset()) + "], " + regName;
+        return "    mov "+sizeOfReg(info.getSize())+"[rbp" + offsetToText(info.getOffset()) + "], " + regName;
     }
 
     private String offsetToText(int offset) {
