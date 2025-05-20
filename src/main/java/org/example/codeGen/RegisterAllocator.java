@@ -101,7 +101,7 @@ public class RegisterAllocator {
             }
         }
         for(String res: best.getContains()){
-            generator.generateStore(res, best, instruction);
+            generator.generateStore(res, best);
         }
         best.clear();
         return best;
@@ -135,7 +135,7 @@ public class RegisterAllocator {
                 SymbolInfo info = table.find(var);
                 if(info == null){
                     if(instruction.isMyLogical()){
-                        generator.generateStore(var, register, instruction);
+                        generator.generateStore(var, register);
                     }
                     continue;
                 }
@@ -143,7 +143,7 @@ public class RegisterAllocator {
 
                 if (info.isOnlyInReg(register.getName())){
                     info.removeFrom(register.getName());
-                    generator.generateStore(var, register, instruction);
+                    generator.generateStore(var, register);
                 }
             }
             register.clear();
@@ -155,5 +155,21 @@ public class RegisterAllocator {
         }
     }
 
+
+    public void clearRegCall(SymbolTable table){
+        for (Register register: registers){
+            for (String var : register.getContains()) {
+                SymbolInfo info = table.find(var);
+                if(info == null){
+                    continue;
+                }
+                if (info.isOnlyInReg(register.getName())){
+                    info.removeFrom(register.getName());
+                    generator.generateStore(var, register);
+                }
+            }
+            register.clear();
+        }
+    }
 
 }

@@ -22,6 +22,7 @@ public class Optimizator {
 
 
         Instructions instruction;
+
         for(int i = 1; i < inst.size(); i++){
             instruction = inst.get(i-1);
             Operator op = instruction.getOp();
@@ -30,7 +31,13 @@ public class Optimizator {
 
             switch (op){
                 case PARAM -> {
-                    if (!temp.isEmpty()){
+                   /* if (!temp.isEmpty()){
+                        Block block = new Block(new ArrayList<>(temp));
+                        block.addLabel("NEXT");
+                        blocks.add(block);
+                        temp.clear();
+                    }*/
+                    if (instruction.getLabel() != null){
                         Block block = new Block(new ArrayList<>(temp));
                         block.addLabel("NEXT");
                         blocks.add(block);
@@ -49,11 +56,11 @@ public class Optimizator {
                         params.add(inst.get(i));
                         i++;
                     }
-                    Block callBlock = new Block(new ArrayList<>(params));
-                    callBlock.addLabel("NEXT");
+             //       Block callBlock = new Block(new ArrayList<>(params));
+           //         callBlock.addLabel("NEXT");
 
-
-                    blocks.add(callBlock);
+                    temp.addAll(params);
+            //        blocks.add(callBlock);
                     params.clear();
 
                 }
@@ -65,12 +72,16 @@ public class Optimizator {
                     temp.add(instruction);
                 }
                 case IFFALSE, IFTRUE -> {
-                    Block block = new Block(new ArrayList<>(temp));
-                    block.addLabel("NEXT");
-                    block.addLabel(instruction.getResult());
-                    blocks.add(block);
-                    temp.clear();
-                    temp.add(instruction);
+                    if(temp.isEmpty()){
+                        temp.add(instruction);
+                    }else {
+                        Block block = new Block(new ArrayList<>(temp));
+                        block.addLabel("NEXT");
+                        block.addLabel(instruction.getResult());
+                        blocks.add(block);
+                        temp.clear();
+                        temp.add(instruction);
+                    }
                 }
                 default -> {
                     if(instruction.getLabel() != null){

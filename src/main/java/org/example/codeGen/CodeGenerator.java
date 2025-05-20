@@ -100,18 +100,48 @@
             command.add("print_int:");
             command.add("    push rbp");
             command.add("    mov rbp, rsp");
+
+            command.add("    push rbx");
+            command.add("    push rcx");
+            command.add("    push rdx");
+            command.add("    push rsi");
+            command.add("    push rdi");
+            command.add("    push rax");
+
+
+
+
+
+
             command.add("    sub rsp, 40");
+
             command.add("    mov rax, [rbp+16]");
             command.add("    mov rdi, num_buf");
             command.add("    call int_to_str");
+
+
             command.add("    mov rsi, rdi");
             command.add("    mov rdx, rax");
             command.add("    mov rax, 1");
             command.add("    mov rdi, 1");
             command.add("    syscall");
+
+            command.add("    add rsp, 40");
+
+            command.add("    pop rax");
+            command.add("    pop rdi");
+            command.add("    pop rsi");
+            command.add("    pop rdx");
+            command.add("    pop rcx");
+            command.add("    pop rbx");
+
+
             command.add("    mov rsp, rbp");
             command.add("    pop rbp");
             command.add("    ret");
+
+
+
 
             command.add("int_to_str:");
 
@@ -292,7 +322,7 @@
         }
 
 
-        void generateStore(String var, Register reg, Instructions instruction) {
+        void generateStore(String var, Register reg) {
             SymbolInfo info = table.find(var);
             if(info == null){
                 command.add(stackManager.storeToStackTemp(var, reg.getName()));
@@ -316,7 +346,6 @@
         private void generateStoreStack(String var, Register reg){
 
         }
-
         void generateLoad(String var, Register reg) {
             String nasmReg = reg.getName();
             SymbolInfo info = table.find(var);
@@ -371,46 +400,47 @@
 
         //при умножении сохраняем значения регистров RDX и RAX
         void generateMul(Register result, Register reg1, Register reg2) {
-            if(!result.getName().equals("RAX")){
-                command.add("    push " + result.getName());
-            }
-            command.add("    push " + "RDX");
+            boolean saveRAX = !result.getName().equals("RAX") && !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX");
+            boolean saveRDX = !result.getName().equals("RDX") && !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX");
 
+            if (saveRAX) command.add("    push RAX");
+            if (saveRDX) command.add("    push RDX");
 
-            command.add("    mov " + "RAX, "+reg1.getName());
-            command.add("    imul " + "RAX" + ", " + reg2.getName());
+            if (!reg1.getName().equals("RAX")) {
+                command.add("    mov RAX, " + reg1.getName());
+            }
+            command.add("    imul RAX, " + reg2.getName());
 
-            if(!result.getName().equals("RAX")){
-                command.add("    mov " + result.getName()+","+"RAX");
-                command.add("    pop " + "RDX");
-                command.add("    pop " + "RAX");
+            if (!result.getName().equals("RAX")) {
+                command.add("    mov " + result.getName() + ", RAX");
             }
-            else {
-                command.add("    pop " + "RDX");
-            }
+
+            if (saveRDX) command.add("    pop RDX");
+            if (saveRAX) command.add("    pop RAX");
 
             result.setHasValue(true);
         }
 
         void generateDiv(Register result, Register reg1, Register reg2) {
-            if (!result.getName().equals("RAX")) {
-                command.add("    push " + result.getName());
-            }
-            command.add("    push RDX");
+            boolean saveRAX = !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX") && !result.getName().equals("RAX");
+            boolean saveRDX = !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX");
 
-            command.add("    mov RAX, " + reg1.getName());
-            command.add("    cqo");
-            command.add("    idiv " + reg2.getName());
+            if (saveRAX) command.add("    push RAX");
+            if (saveRDX) command.add("    push RDX");
+
+            if (!reg1.getName().equals("RAX")) {
+                command.add("    mov RAX, " + reg1.getName());
+            }
+
+            command.add("    cqo");                         // sign extend RAX into RDX:RAX
+            command.add("    idiv " + reg2.getName());     // divide RDX:RAX by reg2
 
             if (!result.getName().equals("RAX")) {
                 command.add("    mov " + result.getName() + ", RAX");
-                command.add("    pop RDX");
-                command.add("    pop RAX");
-            } else {
-                command.add("    pop RDX");
             }
 
-
+            if (saveRDX) command.add("    pop RDX");
+            if (saveRAX) command.add("    pop RAX");
 
             result.setHasValue(true);
         }
@@ -477,6 +507,9 @@
             int numParams = Integer.parseInt(instruction.getArg2());
             int bytesToPush = numParams * 8;
 
+
+
+            registerAllocator.clearRegCall(table);
 
             command.add("    call " + instruction.getArg1());
 

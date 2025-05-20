@@ -4,6 +4,8 @@ import org.example.semantic.SymbolInfo;
 import org.example.semantic.SymbolTable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Block {
     private final ArrayList<Instructions> instructions;
@@ -62,6 +64,16 @@ public class Block {
         return instructions;
     }
 
+    private Map<String, LiveInfo> tempVars = new HashMap<>();
+
+    LiveInfo getLiveInfo(String name, SymbolTable table, Map<String, LiveInfo> temps) {
+        SymbolInfo symbol = table.find(name);
+        if (symbol != null) {
+            return new LiveInfo(symbol.isLife(), symbol.getNextUse());
+        } else {
+            return temps.computeIfAbsent(name, k -> new LiveInfo());
+        }
+    }
     public void createDag() {
         DAG dag = new DAG(this);
         optimized = dag.generateNewBlock();
@@ -71,41 +83,66 @@ public class Block {
         for (int i = instructions.size() - 1; i >= 0; i--) {
             Instructions temp = instructions.get(i);
             SymbolTable table = temp.getMyTable();
-            SymbolInfo arg1, arg2, result = null;
+            LiveInfo arg1, arg2, result = null;
+            SymbolInfo arg1Info, arg2Info, resultInfo;
 
-            arg1 = table.find(temp.getArg1());
-            arg2 = table.find(temp.getArg2());
-            result = table.find(temp.getResult());
+            arg1Info = table.find(temp.getArg1());
+            arg2Info = table.find(temp.getArg2());
+            resultInfo = table.find(temp.getResult());
 
-            if (temp.getOp().equals(Operator.RETURN) || temp.getOp().equals(Operator.PRINT)){
+            arg1 = getLiveInfo(temp.getArg1(), table, tempVars);
+            arg2 =  getLiveInfo(temp.getArg2(), table, tempVars);
+            result =  getLiveInfo(temp.getResult(), table, tempVars);
+
+            if (temp.getOp().equals(Operator.RETURN) || temp.getOp().equals(Operator.PRINT) || temp.getOp().equals(Operator.PARAM)){
                 temp.setLifeResult(true);
 
-                if(result != null){
-                    result.addUses(i);
-                    result.setLife(true);
+                result.setNextUse(i);
+                result.setLive(true);
+                if(resultInfo != null){
+                    resultInfo.addUses(i);
+                    resultInfo.setLife(true);
                 }
                 continue;
             }
 
-            if (arg1 != null) {
-                temp.setLifeArg1(arg1.isLife());
-                temp.setNextUseArg1(arg1.getNextUse());
-                arg1.setLife(true);
-                arg1.addUses(i);
+            if (arg1Info != null) {
+                temp.setLifeArg1(arg1Info.isLife());
+                temp.setNextUseArg1(arg1Info.getNextUse());
+                arg1Info.setLife(true);
+                arg1Info.addUses(i);
+            }else {
+                temp.setLifeArg1(arg1.isLive);
+                temp.setNextUseArg1(arg1.nextUse);
+                arg1.setLive(true);
+                arg1.setNextUse(i);
             }
-            if (arg2 != null) {
-                temp.setLifeArg2(arg2.isLife());
-                temp.setNextUseArg2(arg2.getNextUse());
-                arg2.setLife(true);
-                arg2.addUses(i);
-            }
-            if (result != null) {
-                temp.setLifeResult(result.isLife());
-                temp.setNextUseResult(result.getNextUse());
 
-                result.setLife(false);
-                result.addUses(-1);
+            if (arg2Info != null) {
+                temp.setLifeArg2(arg2Info.isLife());
+                temp.setNextUseArg2(arg2Info.getNextUse());
+                arg2Info.setLife(true);
+                arg2Info.addUses(i);
+            } else {
+                temp.setLifeArg2(arg2.isLive);
+                temp.setNextUseArg2(arg2.nextUse);
+                arg2.setLive(true);
+                arg2.setNextUse(i);
             }
+
+            if (resultInfo != null) {
+                temp.setLifeResult(resultInfo.isLife());
+                temp.setNextUseResult(resultInfo.getNextUse());
+
+                resultInfo.setLife(false);
+                resultInfo.addUses(-1);
+            }else {
+                temp.setLifeResult(result.isLive);
+                temp.setNextUseResult(result.nextUse);
+                result.setLive(false);
+                result.setNextUse(-1);
+            }
+
         }
 
     }
@@ -122,5 +159,34 @@ public class Block {
 
     public void setOptimized(Block optimized) {
         this.optimized = optimized;
+    }
+}
+
+class LiveInfo{
+    boolean isLive;
+    int nextUse;
+
+    public LiveInfo(boolean isLive, int nextUse) {
+        this.isLive = isLive;
+        this.nextUse = nextUse;
+    }
+    public LiveInfo() {
+        isLive = false;
+        nextUse = -1;
+    }
+    public boolean isLive() {
+        return isLive;
+    }
+
+    public int getNextUse() {
+        return nextUse;
+    }
+
+    public void setLive(boolean live) {
+        isLive = live;
+    }
+
+    public void setNextUse(int nextUse) {
+        this.nextUse = nextUse;
     }
 }

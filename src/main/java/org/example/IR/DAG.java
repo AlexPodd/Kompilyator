@@ -71,9 +71,9 @@ public class DAG {
                     continue;
                 }
                 if (node.operator.equals(Operator.PARAM)){
-                    break;
+                    continue;
                 }
-                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO)){
+                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO) || node.isLogical){
                     continue;
                 }
 
@@ -99,7 +99,7 @@ public class DAG {
 
     private void constant(){
         for(Node node: nodes){
-            if(node.isVarNode || node.isLoopNode){
+            if(node.isVarNode || node.isLoopNode || node.isLogical){
                 continue;
             }
             if(node.operator.equals(Operator.ASSIGN)){
@@ -349,7 +349,7 @@ public class DAG {
     }
 
     private Node findExistingNode(Operator op, Node left, Node right) {
-        if (op.equals(Operator.PARAM)){
+        if (op.equals(Operator.PARAM) || op.equals(Operator.PRINT)){
             return null;
         }
         if(op.equals(Operator.PLUS) || op.equals(Operator.MULTIPLY)){

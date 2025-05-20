@@ -132,7 +132,7 @@ term:
     factor ((DIVIDE | MULTIPLY | MODULO) factor)*;
 
 factor:
-    literal | SUBTRACT? IDENTIFIER | LEFT_PAREN arithmetic_expression RIGHT_PAREN | SUBTRACT? IDENTIFIER array_index;
+    literal | SUBTRACT? IDENTIFIER | LEFT_PAREN arithmetic_expression RIGHT_PAREN | SUBTRACT? IDENTIFIER array_index | function_call;
 
 
 array_index:
