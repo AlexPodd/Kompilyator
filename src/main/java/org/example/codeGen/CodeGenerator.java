@@ -26,7 +26,9 @@
             command = new ArrayList<>();
             this.globalTable = globalTable;
             generateData();
+            generateBss();
             generateInfo();
+            generateMacro();
             generateCode(blocks);
             generateEnd();
         }
@@ -35,15 +37,48 @@
             command.add("global _start");
             command.add("section .text");
         }
+        private void generateBss(){
+            command.add("section .bss");
+            command.add("num_buf resb 32");
+            for(String var: globalTable.allDeclarated()){
+                SymbolInfo info = globalTable.find(var);
+                if (info.getValue() == null){
+                    switch (info.getType()){
+                        case STRING -> {
+                            command.add(var+" resq 1");
+                        }
+                        case BOOLEAN -> {
+                            command.add(var+" resb 1");
+                        }
+                        case INTEGER -> {
+                            command.add(var+" resd 1");
+                        }
+                        case FLOAT -> {
+
+                        }
+                        case ARRAY -> {
+
+                        }
+                    }
+                }
+            }
+        }
         private void generateData(){
             command.add("section .data");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
+                if (info.getValue() == null){
+                    continue;
+                }
                 if(info.isConst()){
+                    if (info.getType().equals(TypeName.STRING)){
+                        command.add(var.replace("\"", "")+" db "+info.getValue()+", 10");
+                    }
                     continue;
                 }
                 switch (info.getType()){
                     case STRING -> {
+                        command.add(var+" db "+info.getValue()+", 10");
                     }
                     case BOOLEAN -> {
                         command.add(var+" db "+info.getValue());
@@ -59,6 +94,62 @@
                     }
                 }
             }
+        }
+
+        private void generateMacro(){
+            command.add("print_int:");
+            command.add("    push rbp");
+            command.add("    mov rbp, rsp");
+            command.add("    sub rsp, 40");
+            command.add("    mov rax, [rbp+16]");
+            command.add("    mov rdi, num_buf");
+            command.add("    call int_to_str");
+            command.add("    mov rsi, rdi");
+            command.add("    mov rdx, rax");
+            command.add("    mov rax, 1");
+            command.add("    mov rdi, 1");
+            command.add("    syscall");
+            command.add("    mov rsp, rbp");
+            command.add("    pop rbp");
+            command.add("    ret");
+
+            command.add("int_to_str:");
+
+            command.add("    push rbx");
+            command.add("    push rcx");
+            command.add("    push rdx");
+            command.add("    push rsi");
+            command.add("    mov rcx, 0");
+            command.add("    mov rsi, rdi");
+            command.add("    cmp rax, 0");
+            command.add("    jge .convert");
+            command.add("    mov byte [rsi], '-'");
+            command.add("    inc rsi");
+            command.add("    neg rax");
+            command.add(".convert:");
+            command.add("    mov rbx, 10");
+            command.add("    .store_loop:");
+            command.add("    xor rdx, rdx");
+            command.add("    div rbx");
+            command.add("    push rdx");
+            command.add("    inc rcx");
+            command.add("    test rax, rax");
+            command.add("    jnz .store_loop");
+            command.add(".write_digits:");
+            command.add("    pop rdx");
+            command.add("    add dl, '0'");
+            command.add("    mov [rsi], dl");
+            command.add("    inc rsi");
+            command.add("    loop .write_digits");
+            command.add("    mov byte [rsi], 10");
+            command.add("    inc rsi");
+            command.add("    mov rax, rsi");
+            command.add("    sub rax, rdi");
+            command.add("    pop rsi");
+            command.add("    pop rdx");
+            command.add("    pop rcx");
+            command.add("    pop rbx");
+            command.add("    ret");
         }
 
         private void generateEnd(){
@@ -187,7 +278,9 @@
                 case PARAM -> {
                     generateParam(r3, instruction.getResult());
                 }
-
+                case PRINT -> {
+                    generatePrint(r3, instruction.getResult());
+                }
             }
         }
 
@@ -390,6 +483,15 @@
             if (numParams > 0) {
                 command.add("    add rsp, " + bytesToPush);
             }
+
+            SymbolInfo funcInfo = globalTable.find(instruction.getArg1());
+            if(funcInfo.getTypeReturnValue() == TypeName.NULL){
+                return;
+            }
+            rax.clear();
+            rax.addVar(instruction.getResult());
+            rax.setRetValue(funcInfo.getTypeReturnValue());
+            rax.setHasValue(true);
         }
 
         // res = arg1
@@ -428,7 +530,21 @@
         public void addCommand(String commanda){
             command.add(commanda);
         }
-        private void generatePrint(){
-            
+
+        private void generatePrint(Register reg, String var){
+            SymbolInfo info = table.find(var);
+            if(!reg.isHasValue()){
+                generateLoad(var, reg);
+            }
+            switch (info.getType()){
+                case INTEGER -> {
+                    command.add("    movsx "+reg.getName()+", "+reg.getNameLoad(4));
+                    command.add("    push "+reg.getName());
+                    command.add("    call print_int");
+                    command.add("    add rsp, 8");
+                }
+            }
+
+
         }
     }

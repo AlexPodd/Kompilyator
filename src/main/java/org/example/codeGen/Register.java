@@ -2,6 +2,7 @@ package org.example.codeGen;
 
 import org.example.semantic.SymbolInfo;
 import org.example.semantic.SymbolTable;
+import org.example.semantic.TypeName;
 
 import java.util.ArrayList;
 
@@ -15,6 +16,8 @@ public class Register {
 
     private String x32, x16, x8;
 
+    private TypeName retValue;
+
     public Register(String name, String x32, String x16, String x8){
         this.name = name;
         contains = new ArrayList<>();
@@ -24,6 +27,13 @@ public class Register {
         this.x8 = x8;
     }
 
+    public TypeName getRetValue() {
+        return retValue;
+    }
+
+    public void setRetValue(TypeName retValue) {
+        this.retValue = retValue;
+    }
 
     public boolean isHasValue() {
         return hasValue;

@@ -44,10 +44,18 @@ public class Optimizator {
                     }
                     Collections.reverse(params);
                     params.add(instruction);
+
+                    if(instruction.getResult().equals(inst.get(i).getArg1())){
+                        params.add(inst.get(i));
+                        i++;
+                    }
                     Block callBlock = new Block(new ArrayList<>(params));
                     callBlock.addLabel("NEXT");
+
+
                     blocks.add(callBlock);
                     params.clear();
+
                 }
                 case GOTO -> {
                     Block block = new Block(new ArrayList<>(temp));

@@ -70,7 +70,10 @@ public class DAG {
                 if(node.isVarNode){
                     continue;
                 }
-                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO) || node.operator.equals(Operator.PARAM)){
+                if (node.operator.equals(Operator.PARAM)){
+                    break;
+                }
+                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO)){
                     continue;
                 }
 
