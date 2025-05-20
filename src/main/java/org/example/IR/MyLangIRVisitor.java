@@ -408,8 +408,8 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
             }
         }
         table =globalTable;
-        Instructions.setCurrFunc("main");
-        needLabel.add(new Label("main", instructions.size()));
+        Instructions.setCurrFunc("_start");
+        needLabel.add(new Label("_start", instructions.size()));
         visit(ctx.statements());
         return null;
     }

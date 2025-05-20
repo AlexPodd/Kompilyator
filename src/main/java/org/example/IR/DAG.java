@@ -29,8 +29,10 @@ public class DAG {
                 addNode(right);
             }
 
-            Node operationNode = findExistingNode(instructions.getOp(), left, right);
-
+            Node operationNode = null;
+            if (!isLoopNode){
+                operationNode = findExistingNode(instructions.getOp(), left, right);
+            }
 
 
             if (operationNode == null) {

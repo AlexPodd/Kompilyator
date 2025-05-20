@@ -28,16 +28,23 @@ private static ArrayList<SymbolTable> tables = new ArrayList<>();
     private void boolConst(){
         SymbolInfo infoTrue = new SymbolInfo(TypeName.BOOLEAN,1);
         SymbolInfo infoFalse = new SymbolInfo(TypeName.BOOLEAN,0);
+
+        SymbolInfo infoTrue1 = new SymbolInfo(TypeName.INTEGER,1);
+        SymbolInfo infoFalse1 = new SymbolInfo(TypeName.INTEGER,0);
         infoTrue.setConst(true);
         infoFalse.setConst(true);
+        infoTrue1.setConst(true);
+        infoFalse1.setConst(true);
 
-        declaration("правда", infoTrue);
-        declaration("ложь", infoFalse);
+        declaration("правда", infoTrue, false);
+        declaration("0", infoFalse1, false);
+        declaration("1", infoTrue1, false);
+        declaration("ложь", infoFalse, false);
     }
 
 
 
-    public void declaration(String ID, SymbolInfo symbolInfo) {
+    public void declaration(String ID, SymbolInfo symbolInfo, boolean isSizeble) {
        /* if(symbolInfo.getType().equals(TypeName.TEMP)){
             table.put(ID, symbolInfo);
             return;
@@ -51,12 +58,14 @@ private static ArrayList<SymbolTable> tables = new ArrayList<>();
             return;
         }
 
-        if (Objects.requireNonNull(symbolInfo.getType()) == TypeName.ARRAY) {
-            symbolInfo.setOffset(offset);
-            offset -= offsetSize(symbolInfo.getArrayType()) * symbolInfo.getArraySize();
-        } else {
-            symbolInfo.setOffset(offset);
-            offset -= offsetSize(symbolInfo.getType());
+        if(isSizeble) {
+            if (Objects.requireNonNull(symbolInfo.getType()) == TypeName.ARRAY) {
+                symbolInfo.setOffset(offset);
+                offset -= offsetSize(symbolInfo.getArrayType()) * symbolInfo.getArraySize();
+            } else {
+                symbolInfo.setOffset(offset);
+                offset -= offsetSize(symbolInfo.getType());
+            }
         }
 
         symbolInfo.addPlace("stack");

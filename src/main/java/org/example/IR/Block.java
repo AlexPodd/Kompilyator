@@ -20,7 +20,7 @@ public class Block {
 
     public Block(ArrayList<Instructions> instructions) {
         this.instructions = instructions;
-        myLabel = instructions.get(0).getLabel();
+       myLabel = instructions.get(0).getLabel();
         labels = new ArrayList<>();
         nextBlocks = new ArrayList<>();
         myNum = num;

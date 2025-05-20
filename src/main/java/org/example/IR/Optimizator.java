@@ -19,79 +19,70 @@ public class Optimizator {
         params = new ArrayList<>();
         ArrayList<Instructions> temp = new ArrayList<>();
 
-        temp.add(inst.get(0));
 
-        Operator prevOp;
+
+        Instructions instruction;
         for(int i = 1; i < inst.size(); i++){
-            prevOp = inst.get(i-1).getOp();
-            if(prevOp.equals(Operator.RETURN)){
-                Block block = new Block(new ArrayList<>(temp));
-                block.addLabel("END");
-                blocks.add(block);
-                temp.clear();
-                temp.add(inst.get(i));
-                continue;
+            instruction = inst.get(i-1);
+            Operator op = instruction.getOp();
+
+
+
+            switch (op){
+                case PARAM -> {
+                    if (!temp.isEmpty()){
+                        Block block = new Block(new ArrayList<>(temp));
+                        block.addLabel("NEXT");
+                        blocks.add(block);
+                        temp.clear();
+                    }
+                    params.add(instruction);
+                }
+                case CALL -> {
+                    if(params.get(0).getLabel() != null){
+                        params.get(params.size()-1).setLabel(params.get(0).getLabel());
+                    }
+                    Collections.reverse(params);
+                    params.add(instruction);
+                    Block callBlock = new Block(new ArrayList<>(params));
+                    callBlock.addLabel("NEXT");
+                    blocks.add(callBlock);
+                    params.clear();
+                }
+                case GOTO -> {
+                    Block block = new Block(new ArrayList<>(temp));
+                    block.addLabel(instruction.getResult());
+                    blocks.add(block);
+                    temp.clear();
+                    temp.add(instruction);
+                }
+                case IFFALSE, IFTRUE -> {
+                    Block block = new Block(new ArrayList<>(temp));
+                    block.addLabel("NEXT");
+                    block.addLabel(instruction.getResult());
+                    blocks.add(block);
+                    temp.clear();
+                    temp.add(instruction);
+                }
+                default -> {
+                    if(instruction.getLabel() != null){
+                        if(temp.isEmpty()){
+                            temp.add(instruction);
+                        }else {
+                            Block block = new Block(new ArrayList<>(temp));
+                            block.addLabel("NEXT");
+                            blocks.add(block);
+                            temp.clear();
+                            temp.add(instruction);
+                        }
+                    }
+                    else {
+                        temp.add(instruction);
+                    }
+
+                }
             }
 
-            if(prevOp.equals(Operator.CALL)){
-                Block block = new Block(new ArrayList<>(temp));
-                block.addLabel(inst.get(i-1).getResult());
-                blocks.add(block);
-                temp.clear();
-                temp.add(inst.get(i));
-
-
-                Collections.reverse(params);
-                params.add(callInst);
-                Block block1 = new Block(new ArrayList<>(params));
-                block1.addLabel("NEXT");
-                blocks.add(block1);
-                callInst = null;
-                params.clear();
-                continue;
-
-            }
-
-            if(prevOp.equals(Operator.GOTO)){
-                Block block = new Block(new ArrayList<>(temp));
-                block.addLabel(inst.get(i-1).getResult());
-                blocks.add(block);
-                temp.clear();
-                temp.add(inst.get(i));
-                continue;
-            }
-
-            if(prevOp.equals(Operator.IFTRUE) ||  prevOp.equals(Operator.IFFALSE)){
-                Block block = new Block(new ArrayList<>(temp));
-                block.addLabel("NEXT");
-                block.addLabel(inst.get(i-1).getResult());
-                blocks.add(block);
-                temp.clear();
-                temp.add(inst.get(i));
-                continue;
-            }
-
-            if(inst.get(i).getOp().equals(Operator.PARAM)){
-                params.add(inst.get(i));
-                continue;
-            }
-
-            if(inst.get(i).getOp().equals(Operator.CALL)){
-                callInst = inst.get(i);
-                continue;
-            }
-
-
-            if(inst.get(i).getLabel() != null){
-                Block block = new Block(new ArrayList<>(temp));
-                block.addLabel("NEXT");
-                blocks.add(block);
-                temp.clear();
-                temp.add(inst.get(i));
-                continue;
-            }
-
-            temp.add(inst.get(i));
         }
 
         if(!temp.isEmpty()){
@@ -101,27 +92,16 @@ public class Optimizator {
 
         for (int i = 0; i < blocks.size()-1; i++) {
             addNextBlock(blocks.get(i));
-
             if(blocks.get(i).getLabels().contains("NEXT")){
                 blocks.get(i).addNextBlock(blocks.get(i+1));
             }
         }
 
 
-        /*for (int i = 0; i < blocks.size(); i++) {
-            System.out.println("Block "+i);
-            for(Instructions instructions: blocks.get(i).getInstructions()){
-                System.out.println(instructions);
-            }
-            for(Block lab: blocks.get(i).getNextBlocks()){
-                System.out.print(lab.getMynum()+" ");
-            }
-            System.out.println();
-        }*/
-
         lifeAnalyses();
 
     }
+
 
     private void lifeAnalyses(){
         for (int i = blocks.size()-1; i >= 0; i--) {

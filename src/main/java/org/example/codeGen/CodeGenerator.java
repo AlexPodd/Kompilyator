@@ -32,13 +32,16 @@
         }
 
         private void generateInfo(){
-            command.add("global main");
+            command.add("global _start");
             command.add("section .text");
         }
         private void generateData(){
             command.add("section .data");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
+                if(info.isConst()){
+                    continue;
+                }
                 switch (info.getType()){
                     case STRING -> {
                     }
@@ -80,11 +83,11 @@
                     SymbolInfo func = globalTable.find(block.getMyLabel());
                     if(func != null){
                         stackManager.setStackTop(0);
-                        generatePrologueFunc(func.getParametrsSize());
+                        generatePrologueFunc();
                     }
-                    if(block.getMyLabel().equals("main")){
+                    if(block.getMyLabel().equals("_start")){
                         stackManager.setStackTop(0);
-                        generatePrologueFunc(0);
+                        generatePrologueFunc();
                     }
 
                 }
@@ -146,7 +149,7 @@
             return register;
         }
 
-        private void generatePrologueFunc(int numParam){
+        private void generatePrologueFunc(){
             command.add("    push rbp");
             command.add("    mov rbp, rsp");
         }
@@ -205,21 +208,26 @@
 
             if(info.isConst()) return;
 
-
             if(info.isGlobal()){
-                command.add("    mov "+"["+var+"]"+", " + reg.getName());
+                command.add("    mov "+"["+var+"]"+", " + reg.getNameLoad(info.getSize()));
                 info.addPlace("global");
                 return;
             }
-
-
-            command.add(stackManager.storeToStack(info, reg.getName()));
+            command.add(stackManager.storeToStack(info, reg.getNameLoad(info.getSize())));
             info.addPlace("stack");
+        }
+        private void generateStoreGlobal(String var, Register reg){
+
+        }
+
+        private void generateStoreStack(String var, Register reg){
+
         }
 
         void generateLoad(String var, Register reg) {
             String nasmReg = reg.getName();
             SymbolInfo info = table.find(var);
+
 
             if(reg.contain(var) && reg.isHasValue()){
                 return;
@@ -231,31 +239,25 @@
                 reg.setHasValue(true);
                 return;
             }
-
             if(info.isConst()){
                 command.add("    mov " + nasmReg + ", " + table.find(var).getValue().toString());
                 reg.addVar(var);
                 reg.setHasValue(true);
                 return;
             }
-
-
             if(info.isGlobal()){
-
                 command.add("    mov "+reg.getNameLoad(info.getSize())+", " +"["+ var+"]");
                 info.addPlace(reg.getName());
                 reg.addVar(var);
                 reg.setHasValue(true);
                 return;
             }
-
-
             command.add(stackManager.loadFromStack(info, reg));
             info.addPlace(reg.getName());
             reg.addVar(var);
             reg.setHasValue(true);
-
         }
+
 
 
         void generateAdd(Register result, Register reg1, Register reg2) {
@@ -332,7 +334,7 @@
                 r1.addVar(instruction.getArg1());
                 generateLoad(instruction.getArg1(), r1);
                 command.add("    cmp "+ r1.getName()+", "+"0");
-                command.add("    "+"je"+" " + instruction.getResult());
+                command.add("    "+"jne"+" " + instruction.getResult());
                 return;
             }
 
@@ -347,12 +349,12 @@
 
             String com = "";
             switch (instruction.getCompOp()){
-                case LESS -> com = "jge";
-                case LESS_EQUAL -> com = "jg";
+                case LESS -> com = "jg";
+                case LESS_EQUAL -> com = "jge";
                 case EQUAL -> com = "jne";
                 case NOT_EQUAL -> com = "je";
-                case GREATER_EQUAL -> com = "jl";
-                case MORE -> com = "jle";
+                case GREATER_EQUAL -> com = "jle";
+                case MORE -> com = "jl";
             }
 
             command.add("    cmp "+ r1.getName()+", "+r2.getName());
@@ -382,16 +384,8 @@
             int numParams = Integer.parseInt(instruction.getArg2());
             int bytesToPush = numParams * 8;
 
-            // Выравнивание: если сейчас rsp % 16 == 8, нужно дополнительно sub 8
-            if ((bytesToPush % 16) == 0) {
-                command.add("    sub rsp, 8"); // Выровнять стек
-            }
 
             command.add("    call " + instruction.getArg1());
-
-            if ((bytesToPush % 16) == 0) {
-                command.add("    add rsp, 8"); // Вернуть стек обратно
-            }
 
             if (numParams > 0) {
                 command.add("    add rsp, " + bytesToPush);

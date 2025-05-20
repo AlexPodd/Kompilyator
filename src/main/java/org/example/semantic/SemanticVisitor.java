@@ -105,10 +105,10 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
 
                 params.add(utilz.TypeToText(ctx.parameters().parameter(i).type()));
                 parameters.add(ctx.parameters().parameter(i).IDENTIFIER().getText());
-                functionTable.declaration(ctx.parameters().parameter(i).IDENTIFIER().getText(), new SymbolInfo(utilz.TypeToText(ctx.parameters().parameter(i).type())));
+                functionTable.declaration(ctx.parameters().parameter(i).IDENTIFIER().getText(), new SymbolInfo(utilz.TypeToText(ctx.parameters().parameter(i).type())), false);
             }
         }
-        symbolTable.declaration(ctx.IDENTIFIER().getText(), new SymbolInfo(TypeName.FUNCTION,utilz.TypeToText(ctx.return_type().type()), functionTable, params, parameters));
+        symbolTable.declaration(ctx.IDENTIFIER().getText(), new SymbolInfo(TypeName.FUNCTION,utilz.TypeToText(ctx.return_type().type()), functionTable, params, parameters), false);
         SymbolTable globalTable = symbolTable;
         symbolTable = functionTable;
         visit(ctx.block());
@@ -134,15 +134,16 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
         if (!type.getMyType().equals(TypeName.INTEGER)){
             errorHandler.ErrorSemIterator(ctx, ctx.declaration().IDENTIFIER().getText());
         }
-
+        symbolTable = symbolTable.enterScope();
         if(!type.CheckTypeValue(ctx.declaration().expression(), symbolTable)){
             errorHandler.ErrorSemIterator(ctx, ctx.declaration().IDENTIFIER().getText());
             return null;
         }
-        symbolTable = symbolTable.enterScope();
-        symbolTable.declaration(ctx.declaration().IDENTIFIER().getText(), new SymbolInfo(TypeName.INTEGER, ctx.declaration().expression().getText()));
+
+        symbolTable.declaration(ctx.declaration().IDENTIFIER().getText(), new SymbolInfo(TypeName.INTEGER, ctx.declaration().expression().getText()), true);
         type = typeFactory.createType(TypeName.BOOLEAN, legalType, null);
         //проверка что логическое выражение
+
         if(!type.CheckTypeValue(ctx.expression(), symbolTable)){
             symbolTable = symbolTable.exitScope();
             errorHandler.ErrorSemTypeError(ctx, "Не логическое выражение в теле цикла");
@@ -153,6 +154,7 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
 
 
         type = typeFactory.createType(TypeName.INTEGER, legalType, null);
+
         if(!type.CheckTypeValue(ctx.assignment().expression(), symbolTable)){
             symbolTable = symbolTable.exitScope();
             errorHandler.ErrorSemTypeError(ctx, "Присваивание допускает только целые числа");

@@ -50,9 +50,7 @@ public class Main {
         Optimizator optimizator = new Optimizator();
         optimizator.blockConstruct(irVisitor.getInstructions());
         CodeGenerator codeGenerator = new CodeGenerator(optimizator.getBlocks(), globalSymbolTable);
-
         codeGenerator.printCommand();
-
 
         if (parser.getNumberOfSyntaxErrors() > 0) {
             System.err.println("Обнаружены синтаксические ошибки!");

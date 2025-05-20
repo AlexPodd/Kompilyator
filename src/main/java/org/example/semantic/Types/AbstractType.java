@@ -58,6 +58,7 @@ public abstract class AbstractType implements TypeInterface {
                 return false;
             }
             else {
+
              return true;
             }
         }
@@ -82,13 +83,13 @@ public abstract class AbstractType implements TypeInterface {
     @Override
     public void declare(MyLangParser1.DeclarationContext context, SymbolTable table) {
         if(context.expression() == null){
-            table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType));
+            table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType), true);
             return;
         }
         if(!CheckTypeValue(context.expression(), table)){
             return;
         }
-        table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType));
+        table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType), true);
 
     }
     public TypeName getMyType() {

@@ -66,14 +66,14 @@ public class ArrayType extends AbstractType{
         arraySize = Integer.parseInt(context.type().array().INTEGER_LITERAL().getText());
 
         if(context.expression() == null){
-            table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType,legalTypes.get(0), arraySize));
+            table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType,legalTypes.get(0), arraySize), true);
             return;
         }
         if(!CheckExpression(context.expression(), table)){
             return;
         }
 
-        table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType,legalTypes.get(0),arraySize, context.expression().getText()));
+        table.declaration(context.IDENTIFIER().getText(), new SymbolInfo(myType,legalTypes.get(0),arraySize, context.expression().getText()), true);
 
     }
 }

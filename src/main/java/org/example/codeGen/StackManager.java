@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StackManager {
-    private int stackTop; // Текущий верх стека (отрицательный!)
+    private int stackTop;
     private final Map<String, Integer> tempStackOffset = new HashMap<>();
     private final CodeGenerator generator;
     public StackManager(CodeGenerator generator){
@@ -38,12 +38,18 @@ public class StackManager {
 
     public String loadFromStackTemp(String var, String regName) {
         Integer offset = tempStackOffset.get(var);
-        if (offset == null) {
-            throw new RuntimeException("Variable not allocated on stack: " + var);
+        if(offset == null){
+            offset = addToStack(var);
         }
         return "    mov " + regName + ", [rbp" + offsetToText(offset) + "]";
     }
 
+    private int addToStack(String var){
+        stackTop -= 8;
+        generator.addCommand("    sub rsp, "+8);
+        tempStackOffset.put(var, stackTop);
+        return stackTop;
+    }
     public void setStackTop(int stackTop) {
         this.stackTop = stackTop;
     }
@@ -51,10 +57,7 @@ public class StackManager {
     public String storeToStackTemp(String var, String regName) {
         Integer offset = tempStackOffset.get(var);
         if (offset == null) {
-            stackTop -= 8; // выделяем 8 байт
-            generator.addCommand("    sub rsp, "+8);
-            offset = stackTop;
-            tempStackOffset.put(var, offset);
+            offset = addToStack(var);
         }
         return "    mov [rbp" + offsetToText(offset) + "], " + regName;
     }

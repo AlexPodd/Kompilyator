@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class TypeFactory implements TypeFactoryInterface{
     @Override
     public TypeInterface createType(TypeName typeName, ArrayList<TypeName> legalType, TypeName arrayType) {
+        legalType.clear();
         switch (typeName){
             case BOOLEAN -> {
                 legalType.add(TypeName.BOOLEAN);
