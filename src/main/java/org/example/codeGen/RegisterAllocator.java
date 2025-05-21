@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class RegisterAllocator {
     private final ArrayList<Register> registers;
     private CodeGen generator;
-    private ArrayList<Register> cantChange;
+    private final ArrayList<Register> cantChange;
 
     public RegisterAllocator(ArrayList<Register> registers, ArrayList<Register> cantChange){
         this.registers = registers;
@@ -160,11 +160,6 @@ public class RegisterAllocator {
                 }
             }
             register.clear();
-        }
-
-
-        if(!instruction.isMyLogical()) {
-            manager.clearTemp();
         }
     }
 

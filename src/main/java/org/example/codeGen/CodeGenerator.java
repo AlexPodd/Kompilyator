@@ -15,7 +15,7 @@
         private final SymbolTable globalTable;
         private final ArrayList<String> command;
 
-        private final Register rdx = new Register("RDX", "EAX", "AX", "AL");
+        private final Register rdx = new Register("RDX", "EDX", "AX", "AL");
         private final Register rcx = new Register("RCX", "ECX", "CX", "CL");
         private final Register rbx = new Register("RBX", "EBX", "BX", "BL");
         private final Register rax = new Register("RAX", "EAX", "AX", "AL");
@@ -213,12 +213,16 @@
             command.add(label+":");
             SymbolInfo func = globalTable.find(label);
             if(func != null){
-                stackManager.setStackTop(0);
+
+                table = func.getSymbolTable();
                 generatePrologueFunc(func);
+                stackManager.initFunc(func.getSymbolTable().getOffset());
             }
             if(label.equals("_start")){
-                stackManager.setStackTop(0);
+
+                table = globalTable;
                 generatePrologueFunc(null);
+                stackManager.initFunc(0);
             }
         }
 
@@ -240,8 +244,11 @@
                 Register r1 = null,r2 = null,r3 = null;
 
                 for(Instructions instruction: block.getOptimized().getInstructions()){
-                    table = instruction.getMyTable();
-                    stackManager.updateStackTop(table.getOffset());
+                    command.add(instruction.toString());
+                    if(table != instruction.getMyTable()){
+                        table = instruction.getMyTable();
+                        stackManager.newBlockLocalVariable(table.getOffset());
+                    }
                     switch (instruction.getTypeResult()){
                         case FLOAT -> {
                             gen = codeGenFLOAT;

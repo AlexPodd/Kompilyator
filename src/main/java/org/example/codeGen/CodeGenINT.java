@@ -165,7 +165,7 @@ public class CodeGenINT extends AbstractCodeGen{
             reg.setHasValue(true);
             return;
         }
-        command.add(stackManager.loadFromStack(info, reg));
+        command.add(stackManager.loadLocalFromStack(var ,info, reg));
         info.addPlace(reg.getName());
         reg.addVar(var);
         reg.setHasValue(true);
@@ -208,7 +208,7 @@ public class CodeGenINT extends AbstractCodeGen{
             info.addPlace("global");
             return;
         }
-        command.add(stackManager.storeToStack(info, reg.getNameLoad(info.getSize())));
+        command.add(stackManager.storeLocalToStack(var ,info, reg.getNameLoad(info.getSize())));
         info.addPlace("stack");
     }
 
