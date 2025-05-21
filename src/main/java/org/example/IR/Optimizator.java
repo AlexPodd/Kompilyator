@@ -49,7 +49,7 @@ public class Optimizator {
                     if(params.get(0).getLabel() != null){
                         params.get(params.size()-1).setLabel(params.get(0).getLabel());
                     }
-                    Collections.reverse(params);
+                    //Collections.reverse(params);
                     params.add(instruction);
 
                     if(instruction.getResult().equals(inst.get(i).getArg1())){

@@ -60,11 +60,11 @@ private static ArrayList<SymbolTable> tables = new ArrayList<>();
 
         if(isSizeble) {
             if (Objects.requireNonNull(symbolInfo.getType()) == TypeName.ARRAY) {
-                symbolInfo.setOffset(offset);
                 offset -= offsetSize(symbolInfo.getArrayType()) * symbolInfo.getArraySize();
-            } else {
                 symbolInfo.setOffset(offset);
+            } else {
                 offset -= offsetSize(symbolInfo.getType());
+                symbolInfo.setOffset(offset);
             }
         }
 

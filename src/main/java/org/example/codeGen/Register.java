@@ -26,6 +26,10 @@ public class Register {
         this.x16 = x16;
         this.x8 = x8;
     }
+    public Register(String name){
+        this.name = name;
+        contains = new ArrayList<>();
+    }
 
     public TypeName getRetValue() {
         return retValue;

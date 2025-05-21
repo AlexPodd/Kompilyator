@@ -105,7 +105,7 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
 
                 params.add(utilz.TypeToText(ctx.parameters().parameter(i).type()));
                 parameters.add(ctx.parameters().parameter(i).IDENTIFIER().getText());
-                functionTable.declaration(ctx.parameters().parameter(i).IDENTIFIER().getText(), new SymbolInfo(utilz.TypeToText(ctx.parameters().parameter(i).type())), false);
+                functionTable.declaration(ctx.parameters().parameter(i).IDENTIFIER().getText(), new SymbolInfo(utilz.TypeToText(ctx.parameters().parameter(i).type())), true);
             }
         }
         symbolTable.declaration(ctx.IDENTIFIER().getText(), new SymbolInfo(TypeName.FUNCTION,utilz.TypeToText(ctx.return_type().type()), functionTable, params, parameters), false);

@@ -42,7 +42,6 @@ public class DAG {
                 addNode(operationNode);
             }
 
-            operationNode.setFuncName(instructions.getMyFunc());
             operationNode.setMyTable(instructions.getMyTable());
             if(isLoopNode){
                 operationNode.setLoopNode(true);
@@ -264,7 +263,6 @@ public class DAG {
 
 
         Instructions instructions1 =new Instructions(node.operator, left,node.comprassion, right, result, node.getMyTable());
-        instructions1.setMyFunc(node.funcName);
         instructions1.setMyLogical(node.isLogical);
         instructions.add(instructions1);
 
@@ -275,7 +273,6 @@ public class DAG {
             }
 
             instructions.add(new Instructions(Operator.ASSIGN, result, null, node.variables.get(i), table));
-            instructions1.setMyFunc(node.funcName);
         }
 
         visited.add(node);
@@ -392,8 +389,6 @@ public class DAG {
 
         private boolean isLogical = false;
 
-        private String funcName;
-
         private SymbolTable myTable;
 
         public void setLoopNode(boolean loopNode) {
@@ -420,14 +415,6 @@ public class DAG {
             this.isVarNode = false;
             this.parents = new ArrayList<>();
             this.variables = new ArrayList<>();
-        }
-
-        public void setFuncName(String funcName) {
-            this.funcName = funcName;
-        }
-
-        public String getFuncName() {
-            return funcName;
         }
 
         public Node(String root) {

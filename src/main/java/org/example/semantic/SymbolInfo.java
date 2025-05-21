@@ -94,9 +94,9 @@ public class SymbolInfo {
         this.parametrs = parametrs;
         parametrsSize = parametrs.size();
 
-        for(int i = 0; i<parametrs.size(); i++){
+        /*for(int i = 0; i<parametrs.size(); i++){
             symbolTable.find(parametrs.get(i)).setOffset((i+2)*8);
-        }
+        }*/
 
     }
 

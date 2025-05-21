@@ -1,7 +1,9 @@
 package org.example.IR;
 
 
+import org.example.semantic.SymbolInfo;
 import org.example.semantic.SymbolTable;
+import org.example.semantic.TypeName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.HashSet;
 //result - метка перехода
 public class Instructions {
     private static int Number = 0;
+    private static final HashMap<String, TypeName> tempType = new HashMap<>();
     private int myNumber;
     private Operator op;
     private String arg1;
@@ -29,7 +32,7 @@ public class Instructions {
     private Operator compOp;
 
     private String label;
-    private boolean myInLoop;
+    private final boolean myInLoop;
 
     private boolean myLogical;
 
@@ -37,8 +40,10 @@ public class Instructions {
 
     private static boolean isLogical = false;
 
-    private static String currFunc;
-    private String myFunc;
+    private TypeName typeArg1;
+    private TypeName typeArg2;
+    private TypeName typeResult;
+
     public Instructions(String op, String arg1, String arg2, String result, SymbolTable table) {
         this.op = genOp(op);
         this.arg1 = arg1;
@@ -49,7 +54,7 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
-        myFunc = currFunc;
+        setType();
     }
     public Instructions(Operator op, String arg1, String arg2, String result, SymbolTable table) {
         this.op = op;
@@ -61,7 +66,7 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
-        myFunc = currFunc;
+        setType();
     }
 
     public Instructions(String op, String arg1,String compOp, String arg2, String result, SymbolTable table) {
@@ -75,7 +80,7 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
-        myFunc = currFunc;
+        setType();
     }
 
     public Instructions(Operator op, String arg1,Operator compOp, String arg2, String result, SymbolTable table) {
@@ -89,19 +94,45 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
-        myFunc = currFunc;
+        setType();
     }
 
-    public static void setCurrFunc(String currFunc) {
-        Instructions.currFunc = currFunc;
+    private void setType(){
+        typeArg1 = findType(arg1);
+        typeArg2 = findType(arg2);
+        typeResult = findType(result);
+
+        if(typeArg1 == null) typeArg1 = calcType(typeArg2, typeResult, arg1);
+        if(typeArg2 == null) typeArg2 = calcType(typeArg1, typeResult, arg2);
+        if(typeResult == null) typeResult = calcType(typeArg1, typeArg2, result);
+
+    }
+    private TypeName findType(String arg){
+        SymbolInfo info = myTable.find(arg);
+        if(info != null){
+            return info.getType();
+        }
+        return tempType.get(arg);
+    }
+    private TypeName calcType(TypeName type1, TypeName type2, String result){
+        if (TypeName.FLOAT.equals(type1) || TypeName.FLOAT.equals(type2)) {
+            tempType.put(result, TypeName.FLOAT);
+            return TypeName.FLOAT;
+        }
+        tempType.put(result, TypeName.INTEGER);
+        return TypeName.INTEGER;
     }
 
-    public void setMyFunc(String myFunc) {
-        this.myFunc = myFunc;
+    public TypeName getTypeArg1() {
+        return typeArg1;
     }
 
-    public String getMyFunc() {
-        return myFunc;
+    public TypeName getTypeArg2() {
+        return typeArg2;
+    }
+
+    public TypeName getTypeResult() {
+        return typeResult;
     }
 
     public static void setIsLogical(boolean isLogical) {

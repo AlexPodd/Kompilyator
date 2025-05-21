@@ -8,13 +8,26 @@ import java.util.ArrayList;
 
 public class RegisterAllocator {
     private final ArrayList<Register> registers;
-    private final CodeGenerator generator;
+    private CodeGen generator;
+    private ArrayList<Register> cantChange;
 
-    public RegisterAllocator(ArrayList<Register> registers, CodeGenerator generator){
+    public RegisterAllocator(ArrayList<Register> registers, ArrayList<Register> cantChange){
         this.registers = registers;
+        this.cantChange = cantChange;
+    }
+
+    public void setGenerator(CodeGen generator) {
         this.generator = generator;
     }
 
+    public Register getRegNotResult(String var){
+        for(Register register: cantChange){
+            if(register.contain(var)){
+                return register;
+            }
+        }
+        return null;
+    }
     public Register getReg(String var, SymbolTable table, Instructions instruction){
         if(containVar(var) != null){
             return containVar(var);
@@ -33,7 +46,7 @@ public class RegisterAllocator {
             return  valueReUse(var, instruction);
         }
 
-        return spill(instruction);
+        return spill();
     }
 
 
@@ -58,6 +71,7 @@ public class RegisterAllocator {
     private Register regCanBeUsed(SymbolTable table){
         for(Register register: registers){
             boolean canUse = true;
+
             for(String regVar: register.getContains()){
                 SymbolInfo info = table.find(regVar);
                 if(info == null){
@@ -87,16 +101,12 @@ public class RegisterAllocator {
         return null;
     }
 
-    private Register spill(Instructions instruction){
+    private Register spill(){
         Register best = null;
-        int count, min = 100000;
+        int min = Integer.MAX_VALUE;
         for(Register register: registers){
-            count = 0;
-            for(String res: register.getContains()){
-                count++;
-            }
-            if(min> count){
-                min = count;
+            if(min> register.getContains().size()){
+                min = register.getContains().size();
                 best = register;
             }
         }
@@ -122,8 +132,11 @@ public class RegisterAllocator {
          return null;
     }
 
+    public boolean isMyReg(Register register){
+        return registers.contains(register);
+    }
 
-    public void clearReg(boolean isRet, Instructions instruction, SymbolTable table, StackManager manager, ArrayList<String> command){
+    public void clearReg(boolean isRet, Instructions instruction, SymbolTable table, StackManager manager){
         if(isRet){
             for(Register register: registers){
                 register.clear();
@@ -172,4 +185,7 @@ public class RegisterAllocator {
         }
     }
 
+    public ArrayList<Register> getRegisters() {
+        return registers;
+    }
 }

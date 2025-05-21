@@ -19,12 +19,52 @@
         private final Register rcx = new Register("RCX", "ECX", "CX", "CL");
         private final Register rbx = new Register("RBX", "EBX", "BX", "BL");
         private final Register rax = new Register("RAX", "EAX", "AX", "AL");
-        private final RegisterAllocator registerAllocator = new RegisterAllocator(new ArrayList<>(List.of(rcx, rbx, rax, rdx)), this);
-        private final StackManager stackManager = new StackManager(this);
+
+        private final Register rsi = new Register("RSI", "ESI", "SI", "SIL");
+
+        private final Register rdi = new Register("RDI", "EDI", "DI", "DIL");
+
+        private final Register r8 = new Register("R8", "R8D", "R8W", "R8B");
+        private final Register r9 = new Register("R9", "R9D", "R9W", "R9B");
+        private final Register r10= new Register("R10", "R10D", "R10W", "R10B");
+        private final Register r11 = new Register("R11", "R11D", "R11W", "R11B");
+
+
+        private final Register xmm0 = new Register("xmm0");
+        private final Register xmm1 = new Register("xmm1");
+        private final Register xmm2 = new Register("xmm2");
+        private final Register xmm3 = new Register("xmm3");
+        private final Register xmm4 = new Register("xmm4");
+        private final Register xmm5 = new Register("xmm5");
+        private final Register xmm6 = new Register("xmm6");
+        private final Register xmm7 = new Register("xmm7");
+       private final StackManager stackManager = new StackManager(this);
+
+        private final CodeGenFLOAT codeGenFLOAT;
+        private final CodeGenINT codeGenINT;
+
+
+        private final List<Register> argRegs = List.of(rdi, rsi, rdx, rcx, r8, r9);
+        private final List<Register> argRegsFloat = List.of(xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7);
+
+
+        private ArrayList<Register> callerSaved = new ArrayList<>(List.of(rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7));
+
+        private ArrayList<Register> calleeSaved = new ArrayList<>(List.of(rbx));
+
+        private final RegisterAllocator registerAllocator = new RegisterAllocator(new ArrayList<>(List.of(rax, rcx, rbx, rdx)), new ArrayList<>(List.of(rdi, rsi, r8, r9)));
+        private final RegisterAllocator registerAllocatorXMM = new RegisterAllocator(new ArrayList<>(List.of(xmm0, xmm1, xmm2, xmm3,xmm4,xmm5,xmm6,xmm7)), new ArrayList<>(List.of(xmm0, xmm1, xmm2, xmm3,xmm4,xmm5,xmm6,xmm7)));
+
+        private final List<String> argQueue = new ArrayList<>();
 
         public CodeGenerator(List<Block> blocks, SymbolTable globalTable) {
             command = new ArrayList<>();
             this.globalTable = globalTable;
+
+            codeGenINT = new CodeGenINT(command, globalTable, registerAllocator, stackManager, rax);
+            codeGenFLOAT = new CodeGenFLOAT(command, globalTable, registerAllocatorXMM, stackManager);
+            registerAllocator.setGenerator(codeGenINT);
+            registerAllocatorXMM.setGenerator(codeGenFLOAT);
             generateData();
             generateBss();
             generateInfo();
@@ -100,51 +140,32 @@
             command.add("print_int:");
             command.add("    push rbp");
             command.add("    mov rbp, rsp");
-
             command.add("    push rbx");
             command.add("    push rcx");
             command.add("    push rdx");
             command.add("    push rsi");
             command.add("    push rdi");
             command.add("    push rax");
-
-
-
-
-
-
             command.add("    sub rsp, 40");
-
             command.add("    mov rax, [rbp+16]");
             command.add("    mov rdi, num_buf");
             command.add("    call int_to_str");
-
-
             command.add("    mov rsi, rdi");
             command.add("    mov rdx, rax");
             command.add("    mov rax, 1");
             command.add("    mov rdi, 1");
             command.add("    syscall");
-
             command.add("    add rsp, 40");
-
             command.add("    pop rax");
             command.add("    pop rdi");
             command.add("    pop rsi");
             command.add("    pop rdx");
             command.add("    pop rcx");
             command.add("    pop rbx");
-
-
             command.add("    mov rsp, rbp");
             command.add("    pop rbp");
             command.add("    ret");
-
-
-
-
             command.add("int_to_str:");
-
             command.add("    push rbx");
             command.add("    push rcx");
             command.add("    push rdx");
@@ -186,6 +207,21 @@
             command.add("    mov rax, 60");
             command.add("    syscall");
         }
+
+        private void generateLabel(String label){
+            if(label == null) return;
+            command.add(label+":");
+            SymbolInfo func = globalTable.find(label);
+            if(func != null){
+                stackManager.setStackTop(0);
+                generatePrologueFunc(func);
+            }
+            if(label.equals("_start")){
+                stackManager.setStackTop(0);
+                generatePrologueFunc(null);
+            }
+        }
+
         private void generateCode(List<Block> blocks){
             System.out.println();
             for(Block block: blocks) {
@@ -195,36 +231,47 @@
                 }
             }
             System.out.println();
-
-
+            CodeGen gen = null;
+            RegisterAllocator allocator = null;
             for(Block block: blocks) {
-                if (block.getMyLabel() != null){
-                    command.add(block.getMyLabel()+":");
+                generateLabel(block.getMyLabel());
+                block.getOptimized().lifeAnalyses();
 
-                    SymbolInfo func = globalTable.find(block.getMyLabel());
-                    if(func != null){
-                        stackManager.setStackTop(0);
-                        generatePrologueFunc();
-                    }
-                    if(block.getMyLabel().equals("_start")){
-                        stackManager.setStackTop(0);
-                        generatePrologueFunc();
-                    }
-
-                }
-
-                Block optimized = block.getOptimized();
-                optimized.lifeAnalyses();
                 Register r1 = null,r2 = null,r3 = null;
-                Instructions instructionsLast = null;
-                for(Instructions instruction: optimized.getInstructions()){
+
+                for(Instructions instruction: block.getOptimized().getInstructions()){
                     table = instruction.getMyTable();
                     stackManager.updateStackTop(table.getOffset());
+                    switch (instruction.getTypeResult()){
+                        case FLOAT -> {
+                            gen = codeGenFLOAT;
+                            allocator = registerAllocatorXMM;
+                            codeGenFLOAT.setTable(table);
+                        }
+                        default -> {
+                            gen = codeGenINT;
+                            allocator = registerAllocator;
+                            codeGenINT.setTable(table);
+                        }
+                    }
 
-                        if(!instruction.getOp().equals(Operator.IFFALSE) && !instruction.getOp().equals(Operator.GOTO) && !instruction.getOp().equals(Operator.ASSIGN) && !instruction.getOp().equals(Operator.CALL) ) {
-                            r1=choseReg(instruction.getArg1(),false, instruction);
-                            r2=choseReg(instruction.getArg2(),false, instruction);
-                            r3=choseReg(instruction.getResult(),true, instruction);
+                    switch (instruction.getOp()){
+                        case ASSIGN -> {
+                            gen.generateAssign(instruction);
+                        }
+                        case GOTO -> {
+                            generateGoto(instruction);
+                        }
+                        case CALL -> {
+                            generateCall(instruction);
+                        }
+                        case PARAM -> {
+                            generateParam(instruction);
+                        }
+                        default -> {
+                            r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
+                            r2=choseReg(instruction.getArg2(),false, instruction, allocator, gen);
+                            r3=choseReg(instruction.getResult(),true, instruction, allocator, gen);
                             if(r1 != null){
                                 r1.setUsed(false);
                             }
@@ -234,86 +281,101 @@
                             if(r3 != null){
                                 r3.setUsed(false);
                             }
+                            switch (instruction.getOp()){
+                                case PLUS ->{
+                                    gen.generateAdd(r3,r1,r2);
+                                }
+                                case MINUS -> {
+                                    gen.generateSub(r3, r1, r2);
+                                }
+                                case DIVIDE -> {
+                                    gen.generateDiv(r3, r1, r2);
+                                }
+                                case MULTIPLY -> {
+                                    gen.generateMul(r3, r1, r2);
+                                }
+                                case RETURN -> {
+                                    gen.generateReturn(r3, instruction.getResult());
+                                }
+                                case IFFALSE -> {
+                                    gen.generateIfFalse(r1, r2, instruction);
+                                }
+                                case PRINT -> {
+                                    gen.generatePrint(r3, instruction.getResult());
+                                }
+                            }
+
                         }
-
-                    generate(r1,r2,r3, instruction);
-                      instructionsLast = instruction;
-                }
-
-                if(instructionsLast != null){
-                    if(instructionsLast.getOp().equals(Operator.RETURN)){
-                        registerAllocator.clearReg(true, instructionsLast, table, stackManager, command);
-                    }
-                    else {
-                        registerAllocator.clearReg(false, instructionsLast, table, stackManager, command);
                     }
                 }
 
-
+                Instructions instructionsLast = block.getOptimized().getInstructions().get(block.getOptimized().getInstructions().size()-1);
+                registerAllocator.clearReg(instructionsLast.getOp().equals(Operator.RETURN), instructionsLast, table, stackManager);
             }
         }
 
 
-        private Register choseReg(String arg, boolean isResult, Instructions instruction){
+        private Register choseReg(String arg, boolean isResult, Instructions instruction, RegisterAllocator registerAllocator, CodeGen generator){
             Register register = null;
             if(arg != null){
                 if(isResult){
                     register = registerAllocator.getReg(arg, table,instruction);
                     register.addVar(arg);
+                   SymbolInfo changed = table.find(arg);
+                    if(changed != null){
+                        changed.changeValue(register.getName());
+                    }
                 }
                 else {
-                    register = registerAllocator.getReg(arg, table,instruction);
+                    register = registerAllocator.getRegNotResult(arg);
+                    if(register == null){
+                        register = registerAllocator.getReg(arg, table,instruction);
+                    }
                     register.setUsed(true);
-                    generateLoad(arg, register);
+                    generator.generateLoad(arg, register);
                 }
             }
             return register;
         }
 
-        private void generatePrologueFunc(){
+        private void generatePrologueFunc(SymbolInfo funcInfo){
             command.add("    push rbp");
             command.add("    mov rbp, rsp");
-        }
 
-        private void generate(Register r1, Register r2, Register r3, Instructions instruction){
-            switch (instruction.getOp()){
-                case DIVIDE -> {
-                    generateDiv(r3, r1, r2);
-                }
-                case MULTIPLY -> {
-                    generateMul(r3, r1, r2);
-                }
-                case PLUS -> {
-                    generateAdd(r3, r1, r2);
-                }
-                case MINUS -> {
-                    generateSub(r3, r1, r2);
-                }
-                case RETURN -> {
-                    generateReturn(r3, instruction.getResult());
-                }
-                case IFFALSE -> {
-                    generateIfFalse(instruction);
-                }
-                //название функции (1) количество параметров
-                case CALL -> {
-                    generateCall(instruction);
-                }
-                case GOTO -> {
-                    generateGoto(instruction);
-                }
-                case ASSIGN -> {
-                    generateAssign(instruction);
-                }
-                case PARAM -> {
-                    generateParam(r3, instruction.getResult());
-                }
-                case PRINT -> {
-                    generatePrint(r3, instruction.getResult());
+            int intRegCount = 0;
+            int floatRegCount = 0;
+            int stackOffset = 16;
+            if(funcInfo != null){
+                for (String param : funcInfo.getParametrs()) {
+                    SymbolInfo parametr = funcInfo.getSymbolTable().find(param);
+                    if (parametr.getType().equals(TypeName.FLOAT)) {
+                        if (floatRegCount < 6) {
+                            // аргумент в XMM-регистре
+                            Register register = argRegsFloat.get(floatRegCount);
+                            register.setHasValue(true);
+                            register.addVar(param);
+                            parametr.changeValue(register.getName());
+                            floatRegCount++;
+                        } else {
+                            parametr.changeValue("stack");
+                            stackOffset += 8;
+                        }
+                    } else {
+                        if (intRegCount < 6) {
+                            Register register = argRegs.get(intRegCount);
+                            register.setHasValue(true);
+                            register.addVar(param);
+                            parametr.changeValue(register.getName());
+                            intRegCount++;
+                        } else {
+                            parametr.changeValue("stack");
+                            stackOffset += 8;
+                        }
+                    }
                 }
             }
-        }
 
+        }
 
         public void printCommand(){
             for(String s: command){
@@ -322,262 +384,179 @@
         }
 
 
-        void generateStore(String var, Register reg) {
-            SymbolInfo info = table.find(var);
-            if(info == null){
-                command.add(stackManager.storeToStackTemp(var, reg.getName()));
-                return;
-            }
 
-            if(info.isConst()) return;
-
-            if(info.isGlobal()){
-                command.add("    mov "+"["+var+"]"+", " + reg.getNameLoad(info.getSize()));
-                info.addPlace("global");
-                return;
-            }
-            command.add(stackManager.storeToStack(info, reg.getNameLoad(info.getSize())));
-            info.addPlace("stack");
-        }
-        private void generateStoreGlobal(String var, Register reg){
-
-        }
-
-        private void generateStoreStack(String var, Register reg){
-
-        }
-        void generateLoad(String var, Register reg) {
-            String nasmReg = reg.getName();
-            SymbolInfo info = table.find(var);
-
-
-            if(reg.contain(var) && reg.isHasValue()){
-                return;
-            }
-
-            if(info == null){
-                command.add(stackManager.loadFromStackTemp(var, reg.getName()));
-                reg.addVar(var);
-                reg.setHasValue(true);
-                return;
-            }
-            if(info.isConst()){
-                command.add("    mov " + nasmReg + ", " + table.find(var).getValue().toString());
-                reg.addVar(var);
-                reg.setHasValue(true);
-                return;
-            }
-            if(info.isGlobal()){
-                command.add("    mov "+reg.getNameLoad(info.getSize())+", " +"["+ var+"]");
-                info.addPlace(reg.getName());
-                reg.addVar(var);
-                reg.setHasValue(true);
-                return;
-            }
-            command.add(stackManager.loadFromStack(info, reg));
-            info.addPlace(reg.getName());
-            reg.addVar(var);
-            reg.setHasValue(true);
-        }
-
-
-
-        void generateAdd(Register result, Register reg1, Register reg2) {
-            if (!result.getName().equals(reg1.getName())) {
-                command.add("    mov " + result.getName() + ", " + reg1.getName());
-            }
-            command.add("    add " + result.getName() + ", " + reg2.getName());
-            result.setHasValue(true);
-        }
-        void generateSub(Register result, Register reg1, Register reg2) {
-            if (!result.getName().equals(reg1.getName())) {
-                command.add("    mov " + result.getName() + ", " + reg1.getName());
-            }
-            command.add("    sub " + result.getName() + ", " + reg2.getName());
-            result.setHasValue(true);
-        }
-
-
-        //при умножении сохраняем значения регистров RDX и RAX
-        void generateMul(Register result, Register reg1, Register reg2) {
-            boolean saveRAX = !result.getName().equals("RAX") && !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX");
-            boolean saveRDX = !result.getName().equals("RDX") && !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX");
-
-            if (saveRAX) command.add("    push RAX");
-            if (saveRDX) command.add("    push RDX");
-
-            if (!reg1.getName().equals("RAX")) {
-                command.add("    mov RAX, " + reg1.getName());
-            }
-            command.add("    imul RAX, " + reg2.getName());
-
-            if (!result.getName().equals("RAX")) {
-                command.add("    mov " + result.getName() + ", RAX");
-            }
-
-            if (saveRDX) command.add("    pop RDX");
-            if (saveRAX) command.add("    pop RAX");
-
-            result.setHasValue(true);
-        }
-
-        void generateDiv(Register result, Register reg1, Register reg2) {
-            boolean saveRAX = !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX") && !result.getName().equals("RAX");
-            boolean saveRDX = !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX");
-
-            if (saveRAX) command.add("    push RAX");
-            if (saveRDX) command.add("    push RDX");
-
-            if (!reg1.getName().equals("RAX")) {
-                command.add("    mov RAX, " + reg1.getName());
-            }
-
-            command.add("    cqo");                         // sign extend RAX into RDX:RAX
-            command.add("    idiv " + reg2.getName());     // divide RDX:RAX by reg2
-
-            if (!result.getName().equals("RAX")) {
-                command.add("    mov " + result.getName() + ", RAX");
-            }
-
-            if (saveRDX) command.add("    pop RDX");
-            if (saveRAX) command.add("    pop RAX");
-
-            result.setHasValue(true);
-        }
-
-
-
-
-
-
-        void generateIfFalse(Instructions instruction) {
-            Register r1, r2;
-            if(instruction.getCompOp() == null){
-                r1 = registerAllocator.getReg(instruction.getArg1(),  table,instruction);
-                r1.addVar(instruction.getArg1());
-                generateLoad(instruction.getArg1(), r1);
-                command.add("    cmp "+ r1.getName()+", "+"0");
-                command.add("    "+"jne"+" " + instruction.getResult());
-                return;
-            }
-
-
-            r1 = registerAllocator.getReg(instruction.getArg1(), table,instruction);
-            r1.addVar(instruction.getArg1());
-            generateLoad(instruction.getArg1(), r1);
-
-            r2 = registerAllocator.getReg(instruction.getArg2(),table ,instruction);
-            r2.addVar(instruction.getArg2());
-            generateLoad(instruction.getArg2(), r2);
-
-            String com = "";
-            switch (instruction.getCompOp()){
-                case LESS -> com = "jg";
-                case LESS_EQUAL -> com = "jge";
-                case EQUAL -> com = "jne";
-                case NOT_EQUAL -> com = "je";
-                case GREATER_EQUAL -> com = "jle";
-                case MORE -> com = "jl";
-            }
-
-            command.add("    cmp "+ r1.getName()+", "+r2.getName());
-            command.add("    "+com+" " + instruction.getResult());
-        }
         void generateGoto(Instructions instruction) {
-            registerAllocator.clearReg(false, instruction, table, stackManager, command);
+            registerAllocator.clearReg(false, instruction, table, stackManager);
             command.add("    jmp " + instruction.getResult());
         }
 
 
-        void generateReturn(Register reg, String var) {
-            String r = reg.getName();
-            if(!reg.isHasValue()){
-                generateLoad(var ,reg);
-            }
 
-            if (!reg.getName().equals("RAX")){
-                command.add("    mov RAX, " + r);
-            }
+        //переписать, говно))
 
-            command.add("    leave");
-            command.add("    ret");
+        private void generateParam(Instructions instruction){
+            argQueue.add(instruction.getResult());
         }
 
-        void generateCall(Instructions instruction) {
-            int numParams = Integer.parseInt(instruction.getArg2());
-            int bytesToPush = numParams * 8;
+        public void generateCall(Instructions instruction) {
 
+            clearRegCall(table);
 
+            int intIndex = 0, floatIndex = 0;
+            int stackArgCount = 0; // сколько аргументов в стек положили
 
-            registerAllocator.clearRegCall(table);
+            // Сначала загрузим аргументы
+            for (int i = 0; i < argQueue.size(); i++) {
+                String arg = argQueue.get(i);
+                SymbolInfo info = table.find(arg);
 
+                if (info == null){
+                    for (Register r : registerAllocator.getRegisters()) {
+                        if (r.contain(arg)) {
+                            if (intIndex < argRegs.size()) {
+                                Register target = argRegs.get(intIndex++);
+                                if (!target.equals(r)) {
+                                    command.add("    mov " + target.getName() + ", " + r.getName());
+                                }
+                            } else {
+                                command.add("    push " + r.getName());
+                                stackArgCount++;
+                            }
+                            break;
+                        }
+                    }
+
+                    // 2. Проверяем во float-регистрах
+                        for (Register r : registerAllocatorXMM.getRegisters()) {
+                            if (r.contain(arg)) {
+                                if (floatIndex < argRegsFloat.size()) {
+                                    Register target = argRegsFloat.get(floatIndex++);
+                                    if (!target.equals(r)) {
+                                        command.add("    movaps " + target.getName() + ", " + r.getName());
+                                    }
+                                } else {
+                                    command.add("    sub rsp, 8");
+                                    command.add("    movq [rsp], " + r.getName());
+                                    stackArgCount++;
+                                }
+                                break;
+                            }
+                        }
+
+                    continue;
+                }
+
+                boolean isFloat = info.getType() == TypeName.FLOAT;
+
+                // Проверяем, есть ли свободный регистр
+                boolean hasReg = false;
+                Register reg = null;
+
+                if (isFloat && floatIndex < argRegsFloat.size()) {
+                    reg = argRegsFloat.get(floatIndex++);
+                    hasReg = true;
+                } else if (!isFloat && intIndex < argRegs.size()) {
+                    reg = argRegs.get(intIndex++);
+                    hasReg = true;
+                }
+
+                if (hasReg) {
+                    // Загружаем в регистр
+                    if (isFloat) {
+                        codeGenFLOAT.generateLoad(arg, reg);
+                    } else {
+                        codeGenINT.generateLoad(arg, reg);
+                    }
+                } else {
+                    // Не хватает регистров — кладём в стек
+                    // Для простоты считаем, что стек выравнен, и просто делаем push
+                    if (isFloat) {
+                        // Загрузить float в xmm0, потом положить в стек
+                        Register tempXMM = registerAllocatorXMM.getReg(arg ,table, instruction);
+                        codeGenFLOAT.generateLoad(arg, tempXMM);
+                        command.add("    sub rsp, 8");  // резервируем место в стеке
+                        command.add("    movq [rsp], " + tempXMM.getName());
+                    } else {
+                        // Загрузить int/boolean в temp reg, потом положить в стек
+                        Register tempReg = registerAllocator.getReg(arg ,table, instruction);
+                        codeGenINT.generateLoad(arg, tempReg);
+                        command.add("    push " + tempReg.getName());
+                    }
+                    stackArgCount++;
+                }
+            }
+
+            argQueue.clear(); // очистить после подготовки аргументов
+
+            // Вызов
             command.add("    call " + instruction.getArg1());
 
-            if (numParams > 0) {
-                command.add("    add rsp, " + bytesToPush);
+            for (Register reg : callerSaved) {
+                for(String var: reg.getContains()){
+                    SymbolInfo info = table.find(var);
+                    if(info == null){
+                        continue;
+                    }
+                    info.removeFrom(reg.getName());
+                }
+                reg.clear();
+            }
+            // После вызова — очистить стек (если что-то положили туда)
+            if (stackArgCount > 0) {
+                command.add("    add rsp, " + (stackArgCount * 8));
             }
 
-            SymbolInfo funcInfo = globalTable.find(instruction.getArg1());
-            if(funcInfo.getTypeReturnValue() == TypeName.NULL){
-                return;
-            }
-            rax.clear();
-            rax.addVar(instruction.getResult());
-            rax.setRetValue(funcInfo.getTypeReturnValue());
-            rax.setHasValue(true);
-        }
-
-        // res = arg1
-        void generateAssign(Instructions instruction) {
-            String result = instruction.getResult();
-            String coppy = instruction.getArg1();
-
-            Register temp = registerAllocator.containVar(result);
-
-            if (temp != null) {
-                temp.deleteFromReg(result);
-            }
-
-            Register r1 = registerAllocator.getReg(coppy, table,instruction);
-
-            SymbolInfo info = table.find(result);
-            if(info != null){
-                info.changeValue(r1.getName());
-            }
-            r1.addVarVirtual(result);
-
-
-            if(!r1.isHasValue()){
-                generateLoad(coppy, r1);
+            // Если есть возвращаемое значение, сохранить в temp переменную
+            if (instruction.getResult() != null) {
+                switch (instruction.getTypeResult()) {
+                    case FLOAT -> {
+                        xmm0.clear();
+                        xmm0.addVar(instruction.getResult());
+                        xmm0.setHasValue(true);
+                    }
+                    default -> {
+                        rax.clear();
+                        rax.addVar(instruction.getResult());
+                        rax.setHasValue(true);
+                    }
+                }
             }
         }
 
 
-        private void generateParam(Register res, String var){
-            if(!res.isHasValue()){
-                generateLoad(var, res);
+        public void clearRegCall(SymbolTable table){
+            boolean noClean = false;
+            for (Register register: callerSaved){
+                for (String var : register.getContains()) {
+                    SymbolInfo info = table.find(var);
+
+
+
+                    if(info == null){
+                        if(argQueue.contains(var)){
+                            noClean = true;
+                        }
+                        continue;
+                    }
+
+
+                    if (info.isOnlyInReg(register.getName())){
+                        info.removeFrom(register.getName());
+                        if(registerAllocatorXMM.isMyReg(register)){
+                            codeGenFLOAT.generateStore(var, register);
+                        }else {
+                            codeGenINT.generateStore(var, register);
+                        }
+                    }
+                }
+                if(!noClean){
+                    register.clear();
+                }
             }
-            command.add("    push "+res.getName());
         }
 
         public void addCommand(String commanda){
             command.add(commanda);
         }
 
-        private void generatePrint(Register reg, String var){
-            SymbolInfo info = table.find(var);
-            if(!reg.isHasValue()){
-                generateLoad(var, reg);
-            }
-            switch (info.getType()){
-                case INTEGER -> {
-                    command.add("    movsx "+reg.getName()+", "+reg.getNameLoad(4));
-                    command.add("    push "+reg.getName());
-                    command.add("    call print_int");
-                    command.add("    add rsp, 8");
-                }
-            }
-
-
-        }
     }

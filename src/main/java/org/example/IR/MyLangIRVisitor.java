@@ -402,13 +402,11 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         SymbolTable globalTable = table;
         if(ctx.function_declarations() != null){
             for (MyLangParser1.Function_declarationContext context: ctx.function_declarations().function_declaration()){
-                Instructions.setCurrFunc(context.IDENTIFIER().getText());
                 table = globalTable.find(context.IDENTIFIER().getText()).getSymbolTable();
                 visit(context);
             }
         }
         table =globalTable;
-        Instructions.setCurrFunc("_start");
         needLabel.add(new Label("_start", instructions.size()));
         visit(ctx.statements());
         return null;
