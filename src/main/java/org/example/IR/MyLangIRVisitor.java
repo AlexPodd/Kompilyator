@@ -34,11 +34,22 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
 
     @Override
     public String visitArithmetic_expression(MyLangParser1.Arithmetic_expressionContext ctx) {
+        if (ctx.term().isEmpty()) {
+            throw new IllegalStateException("Empty arithmetic expression");
+        }
+
         String result = visitTerm(ctx.term(0));
+        if (result == null) {
+            throw new IllegalStateException("Null result from first term");
+        }
 
         for (int i = 1; i < ctx.term().size(); i++) {
             String operator = ctx.getChild(2 * i - 1).getText();
             String rightOperand = visitTerm(ctx.term(i));
+            if (rightOperand == null) {
+                throw new IllegalStateException("Null right operand for operator: " + operator);
+            }
+
             String temp = newTemp();
             instructions.add(new Instructions(operator, result, rightOperand, temp, table));
             result = temp;
@@ -48,11 +59,22 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
 
     @Override
     public String visitTerm(MyLangParser1.TermContext ctx) {
+        if (ctx.factor().isEmpty()) {
+            throw new IllegalStateException("Empty term");
+        }
+
         String result = visitFactor(ctx.factor(0));
+        if (result == null) {
+            throw new IllegalStateException("Null result from first factor");
+        }
 
         for (int i = 1; i < ctx.factor().size(); i++) {
             String operator = ctx.getChild(2 * i - 1).getText();
             String rightOperand = visitFactor(ctx.factor(i));
+            if (rightOperand == null) {
+                throw new IllegalStateException("Null right operand for operator: " + operator);
+            }
+
             String temp = newTemp();
             instructions.add(new Instructions(operator, result, rightOperand, temp, table));
             result = temp;
@@ -62,24 +84,44 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
 
     @Override
     public String visitFactor(MyLangParser1.FactorContext ctx) {
-        if (ctx.IDENTIFIER() != null){
-            if(ctx.SUBTRACT()!=null){
-                return "-"+ctx.IDENTIFIER().getText();
+        // Обработка идентификаторов
+        if (ctx.IDENTIFIER() != null) {
+            String prefix = ctx.SUBTRACT() != null ? "-" : "";
+            if (ctx.array_index() != null) {
+                String index = visitArray_index(ctx.array_index());
+                return prefix + ctx.IDENTIFIER().getText() + "[" + index + "]";
             }
-            return ctx.IDENTIFIER().getText();
-        }
-        if(ctx.literal() != null){
-            return ctx.literal().getText();
+            return prefix + ctx.IDENTIFIER().getText();
         }
 
-        if(ctx.array_index()!=null){
-            if(ctx.SUBTRACT()!=null){
-                return "-"+ctx.IDENTIFIER().getText()+ctx.array_index().getText();
+        // Обработка литералов
+        if (ctx.literal() != null) {
+            String literal = ctx.literal().getText();
+            if (ctx.SUBTRACT() != null) {
+                return "-" + literal;
             }
-            return ctx.IDENTIFIER().getText()+ctx.array_index().getText();
+            return literal;
         }
 
-        return super.visitFactor(ctx);
+        // Обработка выражений в скобках
+        if (ctx.LEFT_PAREN() != null && ctx.RIGHT_PAREN() != null) {
+            String expr = visitArithmetic_expression(ctx.arithmetic_expression());
+            if (ctx.SUBTRACT() != null) {
+                return "-(" + expr + ")";
+            }
+            return expr;
+        }
+
+        // Обработка вызовов функций
+        if (ctx.function_call() != null) {
+            String call = visitFunction_call(ctx.function_call());
+            if (ctx.SUBTRACT() != null) {
+                return "-" + call;
+            }
+            return call;
+        }
+
+        throw new IllegalStateException("Unsupported factor: " + ctx.getText());
     }
 
 
@@ -137,17 +179,19 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
 
     @Override
     public String visitLogical_expression(MyLangParser1.Logical_expressionContext ctx) {
+
         Instructions.setIsLogical(true);
 
         if (ctx.term_logical().size() == 1) {
+
             return visitTerm_logical(ctx.term_logical(0));
         }
 
-        // Для цепочки OR
         String result = newTemp();
         String endLabel = newLabel();
 
         for (int i = 0; i < ctx.term_logical().size(); i++) {
+
             String termRes = visitTerm_logical(ctx.term_logical(i));
             String nextLabel = newLabel();
 
@@ -161,14 +205,16 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         needLabel.add(new Label(endLabel, instructions.size()));
         instructions.add(new Instructions("assign", "1", null, result, table));
 
-
         Instructions.setIsLogical(false);
+
         return result;
     }
 
     @Override
     public String visitTerm_logical(MyLangParser1.Term_logicalContext ctx) {
+
         if (ctx.factor_logical().size() == 1) {
+
             return visitFactor_logical(ctx.factor_logical(0));
         }
 
@@ -177,12 +223,14 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         String trueLabel = newLabel();
 
         for (int i = 0; i < ctx.factor_logical().size(); i++) {
+
             String factorRes = visitFactor_logical(ctx.factor_logical(i));
             String nextLabel = newLabel();
 
             instructions.add(new Instructions("ifFalse", factorRes, null, endLabel, table));
             needLabel.add(new Label(nextLabel, instructions.size()));
         }
+
 
         instructions.add(new Instructions("assign", "1", null, result, table));
         instructions.add(new Instructions("goto", null, null, trueLabel, table));
@@ -191,31 +239,43 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         needLabel.add(new Label(trueLabel, instructions.size()));
 
         Instructions.setIsLogical(false);
+
         return result;
     }
 
     @Override
     public String visitFactor_logical(MyLangParser1.Factor_logicalContext ctx) {
+
+
+        // Обработка NOT (должна быть первой, так как NOT может сочетаться с другими случаями)
         if (ctx.NOT() != null) {
+
             String falseLabel = newLabel();
             String endLabel = newLabel();
             String temp = newTemp();
             String expr = null;
 
-            if(ctx.BOOLEAN_LITERAL() != null){
+            if (ctx.BOOLEAN_LITERAL() != null) {
                 expr = ctx.BOOLEAN_LITERAL().getText();
 
-
-
             }
-            if(ctx.IDENTIFIER() != null){
+            else if (ctx.IDENTIFIER() != null) {
                 expr = ctx.IDENTIFIER().getText();
+                if (ctx.array_index() != null) {
+                    expr += "[" + visitArray_index(ctx.array_index()) + "]";
+                }
+
+            }
+            else if (ctx.logical_expression() != null) {
+                expr = visitLogical_expression(ctx.logical_expression());
+
             }
 
-            //ПОКА ЗАГЛУШКА ДОДЕЛАТЬ
-            if(ctx.array_index() != null){
+            if (expr == null) {
 
+                throw new IllegalStateException("No expression for NOT operation");
             }
+
 
             instructions.add(new Instructions("ifFalse", expr, null, falseLabel, table));
             instructions.add(new Instructions("assign", "1", null, temp, table));
@@ -225,39 +285,47 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
             needLabel.add(new Label(endLabel, instructions.size()));
 
             Instructions.setIsLogical(false);
+
             return temp;
         }
 
-        if(ctx.array_index() != null){
+        // Обработка выражений в скобках
+        if (ctx.LEFT_PAREN() != null && ctx.RIGHT_PAREN() != null) {
 
+            String result = visitLogical_expression(ctx.logical_expression());
+
+            return result;
         }
 
-        if (ctx.BOOLEAN_LITERAL() != null || ctx.IDENTIFIER() != null){
-            String falseLabel = newLabel();
-            String endLabel = newLabel();
-            String temp = newTemp();
-            String expr = null;
+        // Обработка литералов и идентификаторов
+        if (ctx.BOOLEAN_LITERAL() != null) {
 
-            instructions.add(new Instructions("ifFalse", expr, null, falseLabel, table));
-            instructions.add(new Instructions("assign", "0", null, temp, table));
-            instructions.add(new Instructions("goto", null, null, endLabel, table));
-            needLabel.add(new Label(falseLabel, instructions.size()));
-            instructions.add(new Instructions("assign", "1", null, temp, table));
-            needLabel.add(new Label(endLabel, instructions.size()));
+            return ctx.BOOLEAN_LITERAL().getText(); // Возвращаем как есть
         }
 
+        if (ctx.IDENTIFIER() != null) {
 
+            String identifier = ctx.IDENTIFIER().getText();
+            if (ctx.array_index() != null) {
+                identifier += "[" + visitArray_index(ctx.array_index()) + "]";
+            }
+            return identifier;
+        }
 
-        if (ctx.comparison_operator() != null) {
+        // Обработка операторов сравнения
+        if (ctx.comparison_operator() != null && ctx.arithmetic_expression().size() == 2) {
+
             String left = visitArithmetic_expression(ctx.arithmetic_expression(0));
             String right = visitArithmetic_expression(ctx.arithmetic_expression(1));
             String temp = newTemp();
             String op = ctx.comparison_operator().getText();
 
+
             String trueLabel = newLabel();
             String endLabel = newLabel();
 
-            instructions.add(new Instructions("ifFalse", left, op ,right, trueLabel, table));
+
+            instructions.add(new Instructions("ifFalse", left, op, right, trueLabel, table));
             instructions.add(new Instructions("assign", "0", null, temp, table));
             instructions.add(new Instructions("goto", null, null, endLabel, table));
             needLabel.add(new Label(trueLabel, instructions.size()));
@@ -265,13 +333,14 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
             needLabel.add(new Label(endLabel, instructions.size()));
 
             Instructions.setIsLogical(false);
+
             return temp;
         }
 
-        Instructions.setIsLogical(false);
-        return super.visitFactor_logical(ctx);
-    }
 
+        Instructions.setIsLogical(false);
+        throw new UnsupportedOperationException("Unsupported factor_logical case: " + ctx.getText());
+    }
     @Override
     public String visitPrint(MyLangParser1.PrintContext ctx) {
         String temp = newTemp();

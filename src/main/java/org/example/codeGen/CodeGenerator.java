@@ -309,6 +309,9 @@
                     }
                 }
 
+                if (block.getOptimized().getInstructions().isEmpty()){
+                    continue;
+                }
                 Instructions instructionsLast = block.getOptimized().getInstructions().get(block.getOptimized().getInstructions().size()-1);
                 registerAllocator.clearReg(instructionsLast.getOp().equals(Operator.RETURN), instructionsLast, table, stackManager);
             }
