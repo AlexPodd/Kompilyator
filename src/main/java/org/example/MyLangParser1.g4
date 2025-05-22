@@ -123,7 +123,7 @@ term_logical:
     factor_logical (AND factor_logical)*;
 
 factor_logical:
-  NOT? BOOLEAN_LITERAL | NOT? IDENTIFIER | LEFT_PAREN logical_expression RIGHT_PAREN | comparison_operator | arithmetic_expression comparison_operator arithmetic_expression | NOT? IDENTIFIER array_index;
+  NOT? BOOLEAN_LITERAL | NOT? IDENTIFIER | NOT? LEFT_PAREN logical_expression RIGHT_PAREN | comparison_operator | arithmetic_expression comparison_operator arithmetic_expression | NOT? IDENTIFIER array_index;
 
 arithmetic_expression:
      term ((ADD | SUBTRACT) term)*;

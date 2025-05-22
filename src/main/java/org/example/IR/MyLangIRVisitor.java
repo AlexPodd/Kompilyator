@@ -427,11 +427,17 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
     public String visitFunction_call(MyLangParser1.Function_callContext ctx) {
         String temp;
         String result = newTemp();
-        for(int i = 0; i<ctx.arguments().expression().size(); i++){
-            temp = visit(ctx.arguments().expression(i));
-            instructions.add(new Instructions("param", null, null, temp, table));
+        if(ctx.arguments() != null) {
+            for (int i = 0; i < ctx.arguments().expression().size(); i++) {
+                temp = visit(ctx.arguments().expression(i));
+                instructions.add(new Instructions("param", null, null, temp, table));
+            }
+            instructions.add(new Instructions("call", ctx.IDENTIFIER().getText(), String.valueOf(ctx.arguments().expression().size()), result, table));
         }
-        instructions.add(new Instructions("call", ctx.IDENTIFIER().getText(), String.valueOf(ctx.arguments().expression().size()), result, table));
+        else {
+            instructions.add(new Instructions("call", ctx.IDENTIFIER().getText(), String.valueOf(0), result, table));
+        }
+
         return result;
     }
 

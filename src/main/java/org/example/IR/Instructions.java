@@ -221,6 +221,8 @@ public class Instructions {
                 return Operator.END;
             case "return":
                 return Operator.RETURN;
+            case "%":
+                return Operator.MODULO;
             default:
                 try {
                     throw new Exception("NE WORK");

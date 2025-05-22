@@ -26,6 +26,7 @@ public class MyLangReturnCheckListener extends MyLangParser1BaseListener {
         blocks = new LinkedList<>();
     }
 
+
     @Override
     public void enterBlock(MyLangParser1.BlockContext ctx) {
         table.enterScopeReturn();
@@ -45,12 +46,12 @@ public class MyLangReturnCheckListener extends MyLangParser1BaseListener {
         super.exitBlock(ctx);
     }
 
-    @Override
+  /*  @Override
     public void enterDeclaration(MyLangParser1.DeclarationContext ctx) {
         TypeInterface type = utilz.createType(ctx.type());
         type.declare(ctx, table);
         super.enterDeclaration(ctx);
-    }
+    }*/
 
     @Override
     public void enterFunction_declaration(MyLangParser1.Function_declarationContext ctx) {

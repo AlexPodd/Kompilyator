@@ -20,4 +20,6 @@ public interface CodeGen {
 
     void generateStore(String var, Register reg);
 
+    void generateModulo(Register result, Register reg1, Register reg2);
+
 }

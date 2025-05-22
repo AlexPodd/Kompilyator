@@ -346,7 +346,7 @@ public class DAG {
     }
 
     private Node findExistingNode(Operator op, Node left, Node right) {
-        if (op.equals(Operator.PARAM) || op.equals(Operator.PRINT)){
+        if (op.equals(Operator.PARAM) || op.equals(Operator.PRINT) || op.equals(Operator.CALL)){
             return null;
         }
         if(op.equals(Operator.PLUS) || op.equals(Operator.MULTIPLY)){

@@ -216,13 +216,13 @@
 
                 table = func.getSymbolTable();
                 generatePrologueFunc(func);
-                stackManager.initFunc(func.getSymbolTable().getOffset());
+                stackManager.initFunc(func.getSymbolTable().getOffset(), func.getSymbolTable());
             }
             if(label.equals("_start")){
 
                 table = globalTable;
                 generatePrologueFunc(null);
-                stackManager.initFunc(0);
+                stackManager.initFunc(0, null);
             }
         }
 
@@ -238,16 +238,17 @@
             CodeGen gen = null;
             RegisterAllocator allocator = null;
             for(Block block: blocks) {
+
                 generateLabel(block.getMyLabel());
                 block.getOptimized().lifeAnalyses();
 
                 Register r1 = null,r2 = null,r3 = null;
 
                 for(Instructions instruction: block.getOptimized().getInstructions()){
-                    command.add(instruction.toString());
+                   //   command.add(instruction.toString());
                     if(table != instruction.getMyTable()){
                         table = instruction.getMyTable();
-                        stackManager.newBlockLocalVariable(table.getOffset());
+                        stackManager.newBlockLocalVariable(table.getOffset(), table);
                     }
                     switch (instruction.getTypeResult()){
                         case FLOAT -> {
@@ -274,6 +275,17 @@
                         }
                         case PARAM -> {
                             generateParam(instruction);
+                        }
+                        case IFFALSE -> {
+                            r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
+                            r2=choseReg(instruction.getArg2(),false, instruction, allocator, gen);
+                            if(r1 != null){
+                                r1.setUsed(false);
+                            }
+                            if(r2 != null){
+                                r2.setUsed(false);
+                            }
+                            gen.generateIfFalse(r1, r2, instruction);
                         }
                         default -> {
                             r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
@@ -304,11 +316,12 @@
                                 case RETURN -> {
                                     gen.generateReturn(r3, instruction.getResult());
                                 }
-                                case IFFALSE -> {
-                                    gen.generateIfFalse(r1, r2, instruction);
-                                }
+
                                 case PRINT -> {
                                     gen.generatePrint(r3, instruction.getResult());
+                                }
+                                case MODULO -> {
+                                    gen.generateModulo(r3, r1, r2);
                                 }
                             }
 
@@ -342,7 +355,9 @@
                         register = registerAllocator.getReg(arg, table,instruction);
                     }
                     register.setUsed(true);
-                    generator.generateLoad(arg, register);
+                    if(!register.isHasValue()){
+                        generator.generateLoad(arg, register);
+                    }
                 }
             }
             return register;
@@ -409,7 +424,6 @@
         }
 
         public void generateCall(Instructions instruction) {
-
             clearRegCall(table);
 
             int intIndex = 0, floatIndex = 0;

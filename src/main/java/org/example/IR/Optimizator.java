@@ -46,8 +46,10 @@ public class Optimizator {
                     params.add(instruction);
                 }
                 case CALL -> {
-                    if(params.get(0).getLabel() != null){
-                        params.get(params.size()-1).setLabel(params.get(0).getLabel());
+                    if(!params.isEmpty()){
+                        if(params.get(0).getLabel() != null){
+                            params.get(params.size()-1).setLabel(params.get(0).getLabel());
+                        }
                     }
                     //Collections.reverse(params);
                     params.add(instruction);

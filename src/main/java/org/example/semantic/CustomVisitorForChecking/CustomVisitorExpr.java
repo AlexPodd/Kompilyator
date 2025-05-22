@@ -18,6 +18,7 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
     private final Utilz utilz = Utilz.getUtilz();
     private final ErrorHandler errorHandler = ErrorHandler.getErrorHandler();
 
+    private SymbolTable global;
 
     @Override
     public ArrayList<TypeName> VisitExpression(MyLangParser1.ExpressionContext context, SymbolTable table) {
@@ -160,8 +161,11 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
         SymbolInfo funcInfo = table.find(ctx.IDENTIFIER().getText());
 
         if (funcInfo == null) {
-            errorHandler.ErrorSemIDNotFound(ctx, "Функция " + ctx.IDENTIFIER().getText() + " не объявлена");
-            return null;
+            if(!table.getName().equals(ctx.IDENTIFIER().getText())){
+                errorHandler.ErrorSemIDNotFound(ctx, "Функция " + ctx.IDENTIFIER().getText() + " не объявлена");
+                return null;
+            }
+            funcInfo = table.getGlobal().find(ctx.IDENTIFIER().getText());
         }
 
         if (ctx.arguments() == null && funcInfo.getParams().isEmpty()) {

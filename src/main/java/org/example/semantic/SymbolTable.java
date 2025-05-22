@@ -5,7 +5,7 @@ import java.util.*;
 public class SymbolTable {
 
     private int offset;
-    private final HashMap<String, SymbolInfo> table = new HashMap<>();
+    private HashMap<String, SymbolInfo> table = new HashMap<>();
     private final SymbolTable parent;
 
     private static int tempTableCount = 0;
@@ -14,8 +14,9 @@ public class SymbolTable {
     private final String name;
     private final boolean isGlobal;
 
-private static ArrayList<SymbolTable> tables = new ArrayList<>();
+    private static ArrayList<SymbolTable> tables = new ArrayList<>();
 
+    private static SymbolTable global;
 
     public SymbolTable(SymbolTable parent, String name, int offset, boolean isGlobal) {
         this.parent = parent;
@@ -23,8 +24,28 @@ private static ArrayList<SymbolTable> tables = new ArrayList<>();
         this.offset = offset;
         this.isGlobal = isGlobal;
         tables.add(this);
-        boolConst();
+        if(isGlobal){
+            global = this;
+        }
+   //     boolConst();
     }
+
+    public SymbolTable getGlobal() {
+        return global;
+    }
+
+    public SymbolTable (SymbolTable table1){
+        this.table = new HashMap<>(table1.table);
+        this.name = table1.name;
+        this.offset = table1.offset;
+        this.parent = table1.parent;
+        isGlobal = false;
+    }
+
+    public HashMap<String, SymbolInfo> getTable() {
+        return table;
+    }
+
     private void boolConst(){
         SymbolInfo infoTrue = new SymbolInfo(TypeName.BOOLEAN,1);
         SymbolInfo infoFalse = new SymbolInfo(TypeName.BOOLEAN,0);

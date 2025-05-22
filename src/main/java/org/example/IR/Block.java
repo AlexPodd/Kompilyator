@@ -134,8 +134,9 @@ public class Block {
                 temp.setLifeResult(resultInfo.isLife());
                 temp.setNextUseResult(resultInfo.getNextUse());
 
-                resultInfo.setLife(false);
+                resultInfo.setLife(true);
                 resultInfo.addUses(-1);
+
             }else {
                 temp.setLifeResult(result.isLive);
                 temp.setNextUseResult(result.nextUse);

@@ -63,4 +63,9 @@ public class CodeGenFLOAT extends AbstractCodeGen {
     public void generateStore(String var, Register reg) {
 
     }
+
+    @Override
+    public void generateModulo(Register result, Register reg1, Register reg2) {
+
+    }
 }

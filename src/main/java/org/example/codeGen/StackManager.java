@@ -17,16 +17,38 @@ public class StackManager {
         this.generator = generator;
     }
 
-    public void initFunc(int sizeOfLocalVariable){
+    public void initFunc(int sizeOfLocalVariable, SymbolTable table){
         stackTop = sizeOfLocalVariable;
         generator.addCommand("    sub rsp,"+Math.abs(stackTop));
         tempStackOffset = new HashMap<>();
         localStackOffset = new HashMap<>();
         paramStackOffset = new HashMap<>();
+        stackInit(table);
     }
-    public void newBlockLocalVariable(int sizeOfLocalVariable){
+    public void newBlockLocalVariable(int sizeOfLocalVariable, SymbolTable table){
         stackTop+=sizeOfLocalVariable;
         generator.addCommand("    sub rsp,"+Math.abs(sizeOfLocalVariable));
+        stackInit(table);
+    }
+    private void stackInit(SymbolTable table){
+        if(table != null){
+            for (Map.Entry<String, SymbolInfo> entry : table.getTable().entrySet()) {
+                String key = entry.getKey();
+                SymbolInfo value = entry.getValue();
+                if (value.isConst()){
+                    continue;
+                }
+                if(localStackOffset.get(key) != null){
+                    continue;
+                }
+                localStackOffset.put(key, value.getOffset());
+                if(value.getValue() != null){
+                    generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + value.getValue());
+                }else {
+                    generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + "0");
+                }
+            }
+        }
     }
 
     public void addNewParametr(String name, int offset){
@@ -39,6 +61,7 @@ public class StackManager {
     private int addTempToStack(String var){
         stackTop -= 8;
         generator.addCommand("    sub rsp, "+8);
+        generator.addCommand("    mov "+sizeOfReg(8)+"[rbp" + stackTop + "], " + "0");
         tempStackOffset.put(var, stackTop);
         return stackTop;
     }
@@ -54,6 +77,9 @@ public class StackManager {
 
     public String loadFromStackTemp(String var, String regName) {
         Integer offset = tempStackOffset.get(var);
+        if (offset == null) {
+            offset = addTempToStack(var);
+        }
         return "    mov " + regName + ", [rbp" + offsetToText(offset) + "]";
     }
 
@@ -68,11 +94,11 @@ public class StackManager {
 
     public String loadLocalFromStack(String name,SymbolInfo info, Register reg) {
         localStackOffset.computeIfAbsent(name, k -> info.getOffset());
-        return "    mov " + reg.getNameLoad(info.getSize()) + ", "+sizeOfReg(info.getSize())+ " [rbp" + localStackOffset.get(name) + "]";
+        return "    mov " + reg.getNameLoad(info.getSize()) + ", "+sizeOfReg(info.getSize())+ " [rbp" + offsetToText(localStackOffset.get(name)) + "]";
     }
     public String storeLocalToStack(String name,SymbolInfo info, String regName) {
         localStackOffset.computeIfAbsent(name, k -> info.getOffset());
-        return "    mov "+sizeOfReg(info.getSize())+"[rbp" + localStackOffset.get(name) + "], " + regName;
+        return "    mov "+sizeOfReg(info.getSize())+"[rbp" + offsetToText(localStackOffset.get(name)) + "], " + regName;
     }
 
     private String sizeOfReg(int size){

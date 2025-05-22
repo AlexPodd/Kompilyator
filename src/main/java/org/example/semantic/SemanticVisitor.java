@@ -112,8 +112,11 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
         SymbolTable globalTable = symbolTable;
         symbolTable = functionTable;
         visit(ctx.block());
-        MyLangReturnCheckListener listener = new MyLangReturnCheckListener(typeFactory, symbolTable);
-        listener.checkReturns(ctx);
+
+        //MyLangReturnCheckListener listener = new MyLangReturnCheckListener(typeFactory, symbolTable);
+        //listener.checkReturns(ctx);
+        MyLangReturnCheckVisitor visitor = new MyLangReturnCheckVisitor(typeFactory, symbolTable);
+        visitor.check(ctx);
         symbolTable = globalTable;
         return null;
     }

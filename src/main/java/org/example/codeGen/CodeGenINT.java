@@ -24,6 +24,28 @@ public class CodeGenINT extends AbstractCodeGen{
         if (saveRDX) command.add("    push RDX");
 
         if (!reg1.getName().equals("RAX")) {
+
+            if (reg2.getName().equals("RAX")) {
+                command.add("    push " + reg1.getName());
+                command.add("    push " + reg2.getName());
+
+                command.add("    pop " + reg1.getName());
+                command.add("    pop " + reg2.getName());
+
+                command.add("    mov RAX, " + reg1.getName());
+                command.add("    cqo");
+                command.add("    idiv " + reg2.getName());
+
+                if (!result.getName().equals("RAX")) {
+                    command.add("    mov " + result.getName() + ", RAX");
+                }
+
+                if (saveRDX) command.add("    pop RDX");
+                if (saveRAX) command.add("    pop RAX");
+
+                result.setHasValue(true);
+                return;
+            }
             command.add("    mov RAX, " + reg1.getName());
         }
 
@@ -50,8 +72,28 @@ public class CodeGenINT extends AbstractCodeGen{
         if (saveRDX) command.add("    push RDX");
 
         if (!reg1.getName().equals("RAX")) {
+            if (reg2.getName().equals("RAX")){
+                command.add("    push "+reg1.getName());
+                command.add("    push "+reg2.getName());
+
+                command.add("    pop "+reg1.getName());
+                command.add("    pop "+reg2.getName());
+
+                command.add("    imul RAX, " + reg1.getName());
+                if (!result.getName().equals("RAX")) {
+                    command.add("    mov " + result.getName() + ", RAX");
+                }
+
+                if (saveRDX) command.add("    pop RDX");
+                if (saveRAX) command.add("    pop RAX");
+
+                result.setHasValue(true);
+                return;
+            }
             command.add("    mov RAX, " + reg1.getName());
+
         }
+
         command.add("    imul RAX, " + reg2.getName());
 
         if (!result.getName().equals("RAX")) {
@@ -97,12 +139,12 @@ public class CodeGenINT extends AbstractCodeGen{
 
         String com = "";
         switch (instruction.getCompOp()){
-            case LESS -> com = "jg";
-            case LESS_EQUAL -> com = "jge";
+            case LESS -> com = "jge";
+            case LESS_EQUAL -> com = "jg";
             case EQUAL -> com = "jne";
             case NOT_EQUAL -> com = "je";
-            case GREATER_EQUAL -> com = "jle";
-            case MORE -> com = "jl";
+            case GREATER_EQUAL -> com = "jl";
+            case MORE -> com = "jle";
         }
 
         command.add("    cmp "+ r1.getName()+", "+r2.getName());
@@ -210,6 +252,53 @@ public class CodeGenINT extends AbstractCodeGen{
         }
         command.add(stackManager.storeLocalToStack(var ,info, reg.getNameLoad(info.getSize())));
         info.addPlace("stack");
+    }
+
+    @Override
+    public void generateModulo(Register result, Register reg1, Register reg2) {
+        boolean saveRAX = !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX") && !result.getName().equals("RAX") && !result.getName().equals("RDX");
+        boolean saveRDX = !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX") && !result.getName().equals("RDX");
+
+        if (saveRAX) command.add("    push RAX");
+        if (saveRDX) command.add("    push RDX");
+
+        if (!reg1.getName().equals("RAX")) {
+            if (reg2.getName().equals("RAX")) {
+                command.add("    push " + reg1.getName());
+                command.add("    push " + reg2.getName());
+
+                command.add("    pop " + reg1.getName());
+                command.add("    pop " + reg2.getName());
+
+                command.add("    mov RAX, " + reg1.getName());
+                command.add("    cqo");
+                command.add("    idiv " + reg2.getName());
+
+                if (!result.getName().equals("RAX")) {
+                    command.add("    mov " + result.getName() + ", RAX");
+                }
+
+                if (saveRDX) command.add("    pop RDX");
+                if (saveRAX) command.add("    pop RAX");
+
+                result.setHasValue(true);
+                return;
+            }
+
+            command.add("    mov RAX, " + reg1.getName());
+        }
+
+        command.add("    cqo");                         // Sign extend RAX into RDX:RAX
+        command.add("    idiv " + reg2.getName());     // Divide RDX:RAX by reg2
+
+        if (!result.getName().equals("RDX")) {
+            command.add("    mov " + result.getName() + ", RDX"); // Get remainder
+        }
+
+        if (saveRDX) command.add("    pop RDX");
+        if (saveRAX) command.add("    pop RAX");
+
+        result.setHasValue(true);
     }
 
 

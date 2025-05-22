@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.example.IR.MyLangIRVisitor;
 import org.example.IR.Optimizator;
 import org.example.codeGen.CodeGenerator;
+import org.example.error.SemanticError;
 import org.example.semantic.SemanticVisitor;
 import org.example.semantic.SymbolTable;
 import org.example.semantic.Types.TypeFactory;
@@ -52,6 +53,9 @@ public class Main {
         CodeGenerator codeGenerator = new CodeGenerator(optimizator.getBlocks(), globalSymbolTable);
         codeGenerator.printCommand();
 
+        for(SemanticError error: visitor.getErrors()){
+            System.out.println(error.getLine()+" "+error.getMessage());
+        }
         if (parser.getNumberOfSyntaxErrors() > 0) {
             System.err.println("Обнаружены синтаксические ошибки!");
         } else {
