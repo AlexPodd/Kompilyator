@@ -17,6 +17,7 @@ public class Register {
     private String x32, x16, x8;
 
     private TypeName retValue;
+    private boolean isFloat;
 
     public Register(String name, String x32, String x16, String x8){
         this.name = name;
@@ -25,10 +26,16 @@ public class Register {
         this.x32 = x32;
         this.x16 = x16;
         this.x8 = x8;
+        isFloat = false;
     }
     public Register(String name){
         this.name = name;
         contains = new ArrayList<>();
+        isFloat = true;
+    }
+
+    public boolean isFloat() {
+        return isFloat;
     }
 
     public TypeName getRetValue() {

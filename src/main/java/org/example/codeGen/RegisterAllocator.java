@@ -3,6 +3,7 @@ package org.example.codeGen;
 import org.example.IR.Instructions;
 import org.example.semantic.SymbolInfo;
 import org.example.semantic.SymbolTable;
+import org.example.semantic.TypeName;
 
 import java.util.ArrayList;
 
@@ -178,6 +179,14 @@ public class RegisterAllocator {
             }
             register.clear();
         }
+    }
+    public Register getEmptyXMMReg(){
+        for(Register register: registers){
+            if(register.getContains().isEmpty()){
+                return register;
+            }
+        }
+        return null;
     }
 
     public ArrayList<Register> getRegisters() {

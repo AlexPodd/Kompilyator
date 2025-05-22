@@ -5,6 +5,8 @@
     import org.example.semantic.SymbolInfo;
     import org.example.semantic.SymbolTable;
     import org.example.semantic.TypeName;
+
+    import javax.swing.text.html.parser.Parser;
     import java.util.ArrayList;
     import java.util.HashMap;
     import java.util.List;
@@ -62,7 +64,7 @@
             this.globalTable = globalTable;
 
             codeGenINT = new CodeGenINT(command, globalTable, registerAllocator, stackManager, rax);
-            codeGenFLOAT = new CodeGenFLOAT(command, globalTable, registerAllocatorXMM, stackManager);
+            codeGenFLOAT = new CodeGenFLOAT(command, globalTable, registerAllocatorXMM, stackManager, xmm0);
             registerAllocator.setGenerator(codeGenINT);
             registerAllocatorXMM.setGenerator(codeGenFLOAT);
             generateData();
@@ -84,7 +86,7 @@
                 SymbolInfo info = globalTable.find(var);
                 if (info.getValue() == null){
                     switch (info.getType()){
-                        case STRING -> {
+                        case STRING, FLOAT -> {
                             command.add(var+" resq 1");
                         }
                         case BOOLEAN -> {
@@ -92,9 +94,6 @@
                         }
                         case INTEGER -> {
                             command.add(var+" resd 1");
-                        }
-                        case FLOAT -> {
-
                         }
                         case ARRAY -> {
 
@@ -127,7 +126,7 @@
                         command.add(var+" dd "+info.getValue());
                     }
                     case FLOAT -> {
-
+                        command.add(var+" dq "+info.getValue());
                     }
                     case ARRAY -> {
 
@@ -236,7 +235,6 @@
             }
             System.out.println();
             CodeGen gen = null;
-            RegisterAllocator allocator = null;
             for(Block block: blocks) {
 
                 generateLabel(block.getMyLabel());
@@ -245,21 +243,20 @@
                 Register r1 = null,r2 = null,r3 = null;
 
                 for(Instructions instruction: block.getOptimized().getInstructions()){
-                   //   command.add(instruction.toString());
+                     // command.add(instruction.toString());
                     if(table != instruction.getMyTable()){
                         table = instruction.getMyTable();
                         stackManager.newBlockLocalVariable(table.getOffset(), table);
                     }
+                    codeGenFLOAT.setTable(table);
+                    codeGenINT.setTable(table);
                     switch (instruction.getTypeResult()){
                         case FLOAT -> {
                             gen = codeGenFLOAT;
-                            allocator = registerAllocatorXMM;
-                            codeGenFLOAT.setTable(table);
+
                         }
                         default -> {
                             gen = codeGenINT;
-                            allocator = registerAllocator;
-                            codeGenINT.setTable(table);
                         }
                     }
 
@@ -277,8 +274,19 @@
                             generateParam(instruction);
                         }
                         case IFFALSE -> {
+                            RegisterAllocator allocator;
+                            if(instruction.getTypeArg1().equals(TypeName.FLOAT)){
+                                gen = codeGenFLOAT;
+                                codeGenFLOAT.setTable(table);
+                                allocator = registerAllocatorXMM;
+                            }
+                            else {
+                                gen = codeGenINT;
+                                codeGenINT.setTable(table);
+                                allocator = registerAllocator;
+                            }
                             r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
-                            r2=choseReg(instruction.getArg2(),false, instruction, allocator, gen);
+                            r2=choseReg(instruction.getArg2(),false, instruction, allocator ,gen);
                             if(r1 != null){
                                 r1.setUsed(false);
                             }
@@ -288,9 +296,9 @@
                             gen.generateIfFalse(r1, r2, instruction);
                         }
                         default -> {
-                            r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
-                            r2=choseReg(instruction.getArg2(),false, instruction, allocator, gen);
-                            r3=choseReg(instruction.getResult(),true, instruction, allocator, gen);
+                            r1=choseRegg(instruction.getArg1(),false, instruction, gen, instruction.getTypeArg1());
+                            r2=choseRegg(instruction.getArg2(),false, instruction, gen, instruction.getTypeArg2());
+                            r3=choseRegg(instruction.getResult(),true, instruction, gen, instruction.getTypeResult());
                             if(r1 != null){
                                 r1.setUsed(false);
                             }
@@ -333,11 +341,26 @@
                     continue;
                 }
                 Instructions instructionsLast = block.getOptimized().getInstructions().get(block.getOptimized().getInstructions().size()-1);
+                registerAllocatorXMM.clearReg(instructionsLast.getOp().equals(Operator.RETURN), instructionsLast, table, stackManager);
                 registerAllocator.clearReg(instructionsLast.getOp().equals(Operator.RETURN), instructionsLast, table, stackManager);
             }
         }
 
-
+        public Register choseRegg(String arg, boolean isResult, Instructions instruction, CodeGen generator, TypeName type){
+            RegisterAllocator allocator = null;
+            CodeGen generator1 = null;
+            switch (type){
+                case FLOAT -> {
+                    allocator = registerAllocatorXMM;
+                    generator1 = codeGenFLOAT;
+                }
+                default -> {
+                    allocator =registerAllocator;
+                    generator1 = codeGenINT;
+                }
+            }
+            return choseReg(arg, isResult, instruction, allocator, generator1);
+        }
         private Register choseReg(String arg, boolean isResult, Instructions instruction, RegisterAllocator registerAllocator, CodeGen generator){
             Register register = null;
             if(arg != null){
@@ -403,9 +426,15 @@
         }
 
         public void printCommand(){
+            int i = 1;
+            for(String s: command){
+                System.out.println(i+" "+s);
+                i++;
+            }
             for(String s: command){
                 System.out.println(s);
             }
+
         }
 
 
@@ -512,6 +541,9 @@
 
             argQueue.clear(); // очистить после подготовки аргументов
 
+
+            int needToAlign = stackManager.alignStackCall();
+            command.add(    "sub rsp, "+needToAlign);
             // Вызов
             command.add("    call " + instruction.getArg1());
 
@@ -529,7 +561,7 @@
             if (stackArgCount > 0) {
                 command.add("    add rsp, " + (stackArgCount * 8));
             }
-
+            command.add("    add rsp, " + needToAlign);
             // Если есть возвращаемое значение, сохранить в temp переменную
             if (instruction.getResult() != null) {
                 switch (instruction.getTypeResult()) {
@@ -547,6 +579,9 @@
             }
         }
 
+        public RegisterAllocator getRegisterAllocatorXMM() {
+            return registerAllocatorXMM;
+        }
 
         public void clearRegCall(SymbolTable table){
             boolean noClean = false;

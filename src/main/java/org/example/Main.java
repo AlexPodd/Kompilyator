@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 public class Main {
     public static void main(String[] args) throws Exception {
         // Укажи путь к файлу с кодом здесь
-        String filePath = "src/main/java/org/example/test.txt";
+        String filePath = "src/main/java/org/example/testFloat.txt";
 
         String inputCode = readFile(filePath);
 
