@@ -113,12 +113,12 @@ public class StackManager {
             offset = addTempToStack(var);
         }
         if (regName.startsWith("xmm")) {
-            return "    movsd [rbp" + offsetToText(offset) + "], " + regName;
+            return "    movsd " + regName + ", [rbp" + offsetToText(offset) + "]";
         } else {
-            return "    mov [rbp" + offsetToText(offset) + "], " + regName;
+            return "    mov " + regName + ", [rbp" + offsetToText(offset) + "]";
         }
     }
-
+    
     public String storeToStackTemp(String var, String regName) {
         Integer offset = tempStackOffset.get(var);
         if (offset == null) {
@@ -130,6 +130,8 @@ public class StackManager {
             return "    mov [rbp" + offsetToText(offset) + "], " + regName;
         }
     }
+
+    
 
 
     public String loadLocalFromStack(String name,SymbolInfo info, Register reg) {
