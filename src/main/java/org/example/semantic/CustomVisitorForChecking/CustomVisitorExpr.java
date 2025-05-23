@@ -97,6 +97,7 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
     public Void visitString_term(MyLangParser1.String_termContext ctx) {
         if(ctx.STRING_LITERAL() != null){
             table.declareConstant(ctx.STRING_LITERAL().getText(), TypeName.STRING);
+            table.getGlobal().declateConstToData(ctx.STRING_LITERAL().getText(), TypeName.STRING);
             Term.add(TypeName.STRING);
             return null;
         }
@@ -127,9 +128,11 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
         if(ctx.INTEGER_LITERAL() != null){
             if(ctx.SUBTRACT()!= null){
                 table.declareConstant("-"+ctx.INTEGER_LITERAL().getText(), TypeName.INTEGER);
+                table.getGlobal().declateConstToData("-"+ctx.INTEGER_LITERAL().getText(), TypeName.FLOAT);
             }
             else {
                 table.declareConstant(ctx.INTEGER_LITERAL().getText(), TypeName.INTEGER);
+                table.getGlobal().declateConstToData(ctx.INTEGER_LITERAL().getText(), TypeName.FLOAT);
             }
 
             Term.add(TypeName.INTEGER);
@@ -141,13 +144,16 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
         if(ctx.FLOAT_LITERAL() != null){
             if(ctx.SUBTRACT()!= null){
                 table.declareConstant("-"+ctx.FLOAT_LITERAL().getText(), TypeName.FLOAT);
+                table.getGlobal().declateConstToData("-"+ctx.FLOAT_LITERAL().getText(), TypeName.FLOAT);
             }
             else {
                 table.declareConstant(ctx.FLOAT_LITERAL().getText(), TypeName.FLOAT);
+                table.getGlobal().declateConstToData(ctx.FLOAT_LITERAL().getText(), TypeName.FLOAT);
             }
 
             Term.add(TypeName.FLOAT);
         }
+    
         if(ctx.BOOLEAN_LITERAL() != null){
             table.declareConstant(ctx.BOOLEAN_LITERAL().getText(), TypeName.BOOLEAN);
             Term.add(TypeName.BOOLEAN);

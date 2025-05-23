@@ -1,5 +1,6 @@
 package org.example.codeGen;
 
+import org.antlr.v4.parse.ANTLRParser.blockEntry_return;
 import org.example.IR.Instructions;
 import org.example.semantic.SymbolInfo;
 import org.example.semantic.SymbolTable;
@@ -88,10 +89,12 @@ private final Register xmm0;
 
     @Override
     public void generateIfFalse(Register r1, Register r2, Instructions instruction) {
+
+
+        if(!r1.isHasValue()) generateLoad(instruction.getArg1(), r1);
         Register actualR1 = castOperation(r1);
 
 
-        if(!actualR1.isHasValue()) generateLoad(instruction.getArg1(), actualR1);
 
         if(instruction.getCompOp() == null) {
                 command.add("    xorpd xmm15, xmm15");  // xmm15 = 0.0
@@ -100,8 +103,9 @@ private final Register xmm0;
                 return;
         }
 
+
+        if(!r2.isHasValue()) generateLoad(instruction.getArg2(), r2);
         Register actualR2 = castOperation(r2);
-        if(!actualR2.isHasValue()) generateLoad(instruction.getArg2(), actualR2);
         // Обработка операций сравнения
         String com = "";
             // Для вещественных чисел используем ucomisd + условные переходы
@@ -114,6 +118,9 @@ private final Register xmm0;
                 case GREATER_EQUAL -> com = "jb";    // below (CF=1)
                 case MORE -> com = "jbe";   // below or equal (CF=1 or ZF=1)
             }
+
+
+            
         command.add("    " + com + " " + instruction.getResult());
     }
 
@@ -223,8 +230,30 @@ private final Register xmm0;
 
     @Override
     public void generatePrint(Register reg, String var) {
+        command.add("    mov rdi, fmtGlobal");
+        
+        boolean cont = xmm0.contain(var);
+        Register temp = null;
+        if(!cont){
+            temp = registerAllocator.getEmptyXMMReg();
+            command.add("    movsd "+temp.getName()+ ", xmm0");
+            command.add("    movsd xmm0, "+var);
+        }
 
-    }
+        int padding = stackManager.alignStackCall();
+        
+        command.add("    sub rsp, "+padding);
+        
+        command.add("    mov eax, 1");
+        command.add("    call printf");
+      
+        command.add("    add rsp, "+padding);
+      
+        
+        if(!cont){
+            command.add("    movsd xmm0, "+temp.getName());
+        }
+    } 
     @Override
     public void generateModulo(Register result, Register reg1, Register reg2) {
 

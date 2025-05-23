@@ -64,6 +64,35 @@ public class SymbolTable {
     }
 
 
+    public void declateConstToData(String value, TypeName type){
+        String ID = null;
+        SymbolInfo info = null;
+        switch (type) {
+            case FLOAT, INTEGER:
+                ID = valueToText(value);
+                double val = Double.parseDouble(value);
+                info = new SymbolInfo(type, val);
+                break;
+            case STRING:
+                ID = "_"+value;
+                info = new SymbolInfo(type, value);
+            default:
+                break;
+        }
+        info.setConst(true);
+        table.put(ID, info);
+    }
+
+
+    private String valueToText(Object val) {
+        double num = Double.parseDouble((String) val);
+        if (num < 0) {
+            return "_minus" + Math.abs(num);
+        } else {
+            return "_"+num;
+        }
+    }
+
 
     public void declaration(String ID, SymbolInfo symbolInfo, boolean isSizeble) {
        /* if(symbolInfo.getType().equals(TypeName.TEMP)){

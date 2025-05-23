@@ -104,15 +104,26 @@
         }
         private void generateData(){
             command.add("section .data");
+            command.add("fmtGlobal db \"Результат: %f\", 10, 0");
+            command.add("extern printf");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
                 if (info.getValue() == null){
                     continue;
                 }
                 if(info.isConst()){
-                    if (info.getType().equals(TypeName.STRING)){
-                        command.add(var.replace("\"", "")+" db "+info.getValue()+", 10");
+                    switch (info.getType()) {
+                        case STRING:
+                            command.add(var.replace("\"", "")+" db "+info.getValue()+", 10");
+                        break;
+                        case FLOAT:
+                            command.add(var+" dq "+info.getValue());    
+                        break;
+                        default:
+                            break;
                     }
+                    
+                    
                     continue;
                 }
                 switch (info.getType()){
@@ -206,6 +217,7 @@
             command.add("    mov rax, 60");
             command.add("    syscall");
         }
+
 
         private void generateLabel(String label){
             if(label == null) return;
@@ -426,11 +438,6 @@
         }
 
         public void printCommand(){
-            int i = 1;
-            for(String s: command){
-                System.out.println(i+" "+s);
-                i++;
-            }
             for(String s: command){
                 System.out.println(s);
             }
@@ -618,4 +625,7 @@
             command.add(commanda);
         }
 
+        public ArrayList<String> getCommandList(){
+            return command;
+        }
     }

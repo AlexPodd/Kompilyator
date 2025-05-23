@@ -13,6 +13,8 @@ import org.example.semantic.SemanticVisitor;
 import org.example.semantic.SymbolTable;
 import org.example.semantic.Types.TypeFactory;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,8 +22,8 @@ import java.nio.file.Paths;
 public class Main {
     public static void main(String[] args) throws Exception {
         // Укажи путь к файлу с кодом здесь
-        String filePath = "src/main/java/org/example/test.txt";
-
+        String filePath = "src/main/java/org/example/testFloat.txt";
+        String fileName = "src/main/java/org/example/nasm/hello.asm";
         String inputCode = readFile(filePath);
 
         CharStream input = CharStreams.fromString(inputCode);
@@ -51,7 +53,19 @@ public class Main {
         Optimizator optimizator = new Optimizator();
         optimizator.blockConstruct(irVisitor.getInstructions());
         CodeGenerator codeGenerator = new CodeGenerator(optimizator.getBlocks(), globalSymbolTable);
+        
         codeGenerator.printCommand();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            for (String command : codeGenerator.getCommandList()) {
+                writer.write(command);
+                writer.newLine();
+            }
+            System.out.println("Файл успешно сохранён: " + fileName);
+        } catch (IOException e) {
+            System.err.println("Ошибка при сохранении файла: " + e.getMessage());
+        }
+
 
         for(SemanticError error: visitor.getErrors()){
             System.out.println(error.getLine()+" "+error.getMessage());

@@ -106,6 +106,17 @@ public class DAG {
                     for(String var: node.variables){
                         SymbolInfo info = table.find(var);
                         if(info != null){
+                            switch (info.getType()) {
+                                case INTEGER, FLOAT:                                    
+                                    table.getGlobal().declateConstToData(node.left.root, TypeName.FLOAT);
+                                    break;
+                            
+                                case STRING:
+                                    table.getGlobal().declateConstToData(node.left.root, TypeName.STRING);
+                                    break;    
+                                default:
+                                    break;
+                            }
                             info.setValue(node.left.root);
                         }
                     }
