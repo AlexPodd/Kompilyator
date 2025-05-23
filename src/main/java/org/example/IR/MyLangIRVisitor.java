@@ -503,7 +503,7 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
     public void setLabel(){
         instructions.add(new Instructions("end", null, null, null, table));
         for(Label label: needLabel){
-            instructions.get(label.getLine()).setLabel(label.getName());
+            instructions.get(label.getLine()).addLabel(label.getName());
         }
 
     }

@@ -37,7 +37,7 @@ public class Optimizator {
                         blocks.add(block);
                         temp.clear();
                     }*/
-                    if (instruction.getLabel() != null){
+                    if (!instruction.getLabels().isEmpty()){
                         Block block = new Block(new ArrayList<>(temp));
                         block.addLabel("NEXT");
                         blocks.add(block);
@@ -46,11 +46,7 @@ public class Optimizator {
                     params.add(instruction);
                 }
                 case CALL -> {
-                    if(!params.isEmpty()){
-                        if(params.get(0).getLabel() != null){
-                            params.get(params.size()-1).setLabel(params.get(0).getLabel());
-                        }
-                    }
+                    
                     //Collections.reverse(params);
                     params.add(instruction);
 
@@ -86,7 +82,7 @@ public class Optimizator {
                     }
                 }
                 default -> {
-                    if(instruction.getLabel() != null){
+                    if(!instruction.getLabels().isEmpty()){
                         if(temp.isEmpty()){
                             temp.add(instruction);
                         }else {
@@ -138,9 +134,12 @@ public class Optimizator {
 
     private void addNextBlock(Block block){
         for(Block bl: blocks){
-            if(block.getLabels().contains(bl.getMyLabel())){
+            for(String label: bl.getLabels()){
+                if(block.getLabels().contains(label)){
                 block.addNextBlock(bl);
             }
+            }
+
         }
     }
 

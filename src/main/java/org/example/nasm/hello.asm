@@ -162,6 +162,7 @@ L7:
     add RBX, RCX
     mov dword[rbp-16], EBX
     jmp L5
+L6:
 L2:
     sub rsp,12
     mov EAX, dword [rbp-12]

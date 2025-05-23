@@ -219,17 +219,22 @@
         }
 
 
-        private void generateLabel(String label){
-            if(label == null) return;
-            command.add(label+":");
-            SymbolInfo func = globalTable.find(label);
+        private void generateLabel(ArrayList<String> labels){
+            if(labels.isEmpty()) return;
+
+            for(String label: labels){
+                command.add(label+":");
+            }
+
+
+            SymbolInfo func = globalTable.find(labels.get(0));
             if(func != null){
 
                 table = func.getSymbolTable();
                 generatePrologueFunc(func);
                 stackManager.initFunc(func.getSymbolTable().getOffset(), func.getSymbolTable());
             }
-            if(label.equals("_start")){
+            if(labels.get(0).equals("_start")){
 
                 table = globalTable;
                 generatePrologueFunc(null);
@@ -249,7 +254,7 @@
             CodeGen gen = null;
             for(Block block: blocks) {
 
-                generateLabel(block.getMyLabel());
+                generateLabel(block.getMyLabels());
                 block.getOptimized().lifeAnalyses();
 
                 Register r1 = null,r2 = null,r3 = null;

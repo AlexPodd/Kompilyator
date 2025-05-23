@@ -31,7 +31,7 @@ public class Instructions {
     private int nextUseResult;
     private Operator compOp;
 
-    private String label;
+    private ArrayList<String> labels;
     private final boolean myInLoop;
 
     private boolean myLogical;
@@ -45,6 +45,7 @@ public class Instructions {
     private TypeName typeResult;
 
     public Instructions(String op, String arg1, String arg2, String result, SymbolTable table) {
+        labels = new ArrayList<>();
         this.op = genOp(op);
         this.arg1 = arg1;
         this.arg2 = arg2;
@@ -57,6 +58,7 @@ public class Instructions {
         setType();
     }
     public Instructions(Operator op, String arg1, String arg2, String result, SymbolTable table) {
+        labels = new ArrayList<>();
         this.op = op;
         this.arg1 = arg1;
         this.arg2 = arg2;
@@ -70,6 +72,7 @@ public class Instructions {
     }
 
     public Instructions(String op, String arg1,String compOp, String arg2, String result, SymbolTable table) {
+        labels = new ArrayList<>();
         this.op = genOp(op);
         this.compOp = genOp(compOp);
         this.arg1 = arg1;
@@ -84,6 +87,7 @@ public class Instructions {
     }
 
     public Instructions(Operator op, String arg1,Operator compOp, String arg2, String result, SymbolTable table) {
+         labels = new ArrayList<>();
         this.op = op;
         this.compOp = compOp;
         this.arg1 = arg1;
@@ -123,6 +127,12 @@ public class Instructions {
         return TypeName.INTEGER;
     }
 
+    public void addLabel(String label){
+        labels.add(label);
+    }
+    public ArrayList<String> getLabels(){
+        return labels;
+    }
     public TypeName getTypeArg1() {
         return typeArg1;
     }
@@ -310,9 +320,6 @@ public class Instructions {
         return result;
     }
 
-    public String getLabel() {
-        return label;
-    }
 
     public void setOp(Operator op) {
         this.op = op;
@@ -330,9 +337,6 @@ public class Instructions {
         this.result = result;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
 
 
     public int getMyNumber() {
@@ -346,7 +350,7 @@ public class Instructions {
     @Override
     public String toString() {
         // Форматируем строку с фиксированными отступами
-        String formattedLabel = label != null ? String.format("%-4s", label) : "    ";
+        String formattedLabel = labels.isEmpty() != false ? String.format("%-4s", labels) : "    ";
         String formattedNumber = String.format("%-3d", myNumber);
 
         // Форматируем аргументы в зависимости от типа операции

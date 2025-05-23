@@ -14,7 +14,7 @@ public class Block {
 
     private final ArrayList<String> labels;
 
-    private final String myLabel;
+    private final ArrayList<String> myLabel;
 
     private static int num = 0;
     private int myNum = 0;
@@ -22,7 +22,7 @@ public class Block {
 
     public Block(ArrayList<Instructions> instructions) {
         this.instructions = instructions;
-       myLabel = instructions.get(0).getLabel();
+       myLabel = instructions.get(0).getLabels();
         labels = new ArrayList<>();
         nextBlocks = new ArrayList<>();
         myNum = num;
@@ -56,7 +56,7 @@ public class Block {
         return nextBlocks;
     }
 
-    public String getMyLabel() {
+    public ArrayList<String> getMyLabels() {
         return myLabel;
     }
 
