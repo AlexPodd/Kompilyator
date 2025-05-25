@@ -21,5 +21,6 @@ public interface CodeGen {
     void generateStore(String var, Register reg);
 
     void generateModulo(Register result, Register reg1, Register reg2);
+    void generateIfTrue(Register r1, Register r2, Instructions instruction);
 
 }

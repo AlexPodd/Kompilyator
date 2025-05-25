@@ -149,7 +149,7 @@ public class RegisterAllocator {
                 SymbolInfo info = table.find(var);
                 if(info == null){
                     if(instruction.isMyLogical()){
-                        generator.generateStore(var, register);
+                    generator.generateStore(var, register);
                     }
                     continue;
                 }

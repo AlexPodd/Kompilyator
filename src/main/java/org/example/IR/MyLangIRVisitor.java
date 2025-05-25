@@ -128,7 +128,7 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
     @Override
     public String visitConditional_statement(MyLangParser1.Conditional_statementContext ctx) {
         String endLabel = newLabel();
-
+        Instructions.setInsideConditional(true);
         for (int i = 0; i < ctx.expression().size(); i++) {
             if(ctx.expression().size() == 1 && ctx.ELSE() == null){
                 instructions.add(new Instructions("ifFalse",visitExpression(ctx.expression(i)),null,endLabel, table));
@@ -136,6 +136,7 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
                 visitBlock(ctx.block(i));
                 table = table.exitScope();
                 needLabel.add(new Label(endLabel, instructions.size()));
+                Instructions.setInsideConditional(false);
                 return endLabel;
             }
 
@@ -153,7 +154,7 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
                 table = table.exitScope();
             }
 
-
+        Instructions.setInsideConditional(false);
         needLabel.add(new Label(endLabel, instructions.size()));
 
         return endLabel;
@@ -176,171 +177,130 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
         }
         return super.visitSingleExpression(ctx);
     }
-
-    @Override
-    public String visitLogical_expression(MyLangParser1.Logical_expressionContext ctx) {
-
-        Instructions.setIsLogical(true);
-
+@Override
+public String visitLogical_expression(MyLangParser1.Logical_expressionContext ctx) {
+    Instructions.setIsLogical(true);
+    try {
         if (ctx.term_logical().size() == 1) {
-
             return visitTerm_logical(ctx.term_logical(0));
         }
 
         String result = newTemp();
+        String trueLabel = newLabel();
         String endLabel = newLabel();
 
         for (int i = 0; i < ctx.term_logical().size(); i++) {
-
             String termRes = visitTerm_logical(ctx.term_logical(i));
-            String nextLabel = newLabel();
-
-            instructions.add(new Instructions("ifTrue", termRes, null, endLabel, table));
-            needLabel.add(new Label(nextLabel, instructions.size()));
+            instructions.add(new Instructions("ifTrue", termRes, null, trueLabel, table));
         }
-
 
         instructions.add(new Instructions("assign", "0", null, result, table));
         instructions.add(new Instructions("goto", null, null, endLabel, table));
-        needLabel.add(new Label(endLabel, instructions.size()));
-        instructions.add(new Instructions("assign", "1", null, result, table));
 
-        Instructions.setIsLogical(false);
-
-        return result;
-    }
-
-    @Override
-    public String visitTerm_logical(MyLangParser1.Term_logicalContext ctx) {
-
-        if (ctx.factor_logical().size() == 1) {
-
-            return visitFactor_logical(ctx.factor_logical(0));
-        }
-
-        String result = newTemp();
-        String endLabel = newLabel();
-        String trueLabel = newLabel();
-
-        for (int i = 0; i < ctx.factor_logical().size(); i++) {
-
-            String factorRes = visitFactor_logical(ctx.factor_logical(i));
-            String nextLabel = newLabel();
-
-            instructions.add(new Instructions("ifFalse", factorRes, null, endLabel, table));
-            needLabel.add(new Label(nextLabel, instructions.size()));
-        }
-
-
-        instructions.add(new Instructions("assign", "1", null, result, table));
-        instructions.add(new Instructions("goto", null, null, trueLabel, table));
-        needLabel.add(new Label(endLabel, instructions.size()));
-        instructions.add(new Instructions("assign", "0", null, result, table));
         needLabel.add(new Label(trueLabel, instructions.size()));
-
-        Instructions.setIsLogical(false);
+        instructions.add(new Instructions("assign", "1", null, result, table));
+        needLabel.add(new Label(endLabel, instructions.size()));
 
         return result;
+    } finally {
+        Instructions.setIsLogical(false);
+    }
+}
+
+@Override
+public String visitTerm_logical(MyLangParser1.Term_logicalContext ctx) {
+    if (ctx.factor_logical().size() == 1) {
+        return visitFactor_logical(ctx.factor_logical(0));
     }
 
-    @Override
-    public String visitFactor_logical(MyLangParser1.Factor_logicalContext ctx) {
+    String result = newTemp();
+    String falseLabel = newLabel();
+    String endLabel = newLabel();
 
+    for (int i = 0; i < ctx.factor_logical().size(); i++) {
+        String factorRes = visitFactor_logical(ctx.factor_logical(i));
+        instructions.add(new Instructions("ifFalse", factorRes, null, falseLabel, table));
+    }
 
-        // Обработка NOT (должна быть первой, так как NOT может сочетаться с другими случаями)
-        if (ctx.NOT() != null) {
+    instructions.add(new Instructions("assign", "1", null, result, table));
+    instructions.add(new Instructions("goto", null, null, endLabel, table));
 
-            String falseLabel = newLabel();
-            String endLabel = newLabel();
-            String temp = newTemp();
-            String expr = null;
+    needLabel.add(new Label(falseLabel, instructions.size()));
+    instructions.add(new Instructions("assign", "0", null, result, table));
+    needLabel.add(new Label(endLabel, instructions.size()));
 
-            if (ctx.BOOLEAN_LITERAL() != null) {
-                expr = ctx.BOOLEAN_LITERAL().getText();
+    Instructions.setIsLogical(false);
+    return result;
+}
 
-            }
-            else if (ctx.IDENTIFIER() != null) {
-                expr = ctx.IDENTIFIER().getText();
-                if (ctx.array_index() != null) {
-                    expr += "[" + visitArray_index(ctx.array_index()) + "]";
-                }
+@Override
+public String visitFactor_logical(MyLangParser1.Factor_logicalContext ctx) {
+    boolean isNegated = ctx.NOT() != null;
+    String result;
 
-            }
-            else if (ctx.logical_expression() != null) {
-                expr = visitLogical_expression(ctx.logical_expression());
+    // Обработка скобок
+    if (ctx.LEFT_PAREN() != null && ctx.logical_expression() != null) {
+        result = visitLogical_expression(ctx.logical_expression());
+    }
 
-            }
+    // Обработка литералов
+    else if (ctx.BOOLEAN_LITERAL() != null) {
+        result = ctx.BOOLEAN_LITERAL().getText();
+    }
 
-            if (expr == null) {
-
-                throw new IllegalStateException("No expression for NOT operation");
-            }
-
-
-            instructions.add(new Instructions("ifFalse", expr, null, falseLabel, table));
-            instructions.add(new Instructions("assign", "1", null, temp, table));
-            instructions.add(new Instructions("goto", null, null, endLabel, table));
-            needLabel.add(new Label(falseLabel, instructions.size()));
-            instructions.add(new Instructions("assign", "0", null, temp, table));
-            needLabel.add(new Label(endLabel, instructions.size()));
-
-            Instructions.setIsLogical(false);
-
-            return temp;
+    // Обработка идентификаторов (возможно с индексом)
+    else if (ctx.IDENTIFIER() != null) {
+        result = ctx.IDENTIFIER().getText();
+        if (ctx.array_index() != null) {
+            result += "[" + visitArray_index(ctx.array_index()) + "]";
         }
+    }
 
-        // Обработка выражений в скобках
-        if (ctx.LEFT_PAREN() != null && ctx.RIGHT_PAREN() != null) {
+    // Обработка сравнения: выражение op выражение
+    else if (ctx.comparison_operator() != null && ctx.arithmetic_expression().size() == 2) {
+        String left = visitArithmetic_expression(ctx.arithmetic_expression(0));
+        String right = visitArithmetic_expression(ctx.arithmetic_expression(1));
+        result = newTemp();
 
-            String result = visitLogical_expression(ctx.logical_expression());
+        String op = ctx.comparison_operator().getText();
+        String trueLabel = newLabel();
+        String endLabel = newLabel();
 
-            return result;
-        }
+        instructions.add(new Instructions("ifTrue", left, op, right, trueLabel, table));
+        instructions.add(new Instructions("assign", "0", null, result, table));
+        instructions.add(new Instructions("goto", null, null, endLabel, table));
+        needLabel.add(new Label(trueLabel, instructions.size()));
+        instructions.add(new Instructions("assign", "1", null, result, table));
+        needLabel.add(new Label(endLabel, instructions.size()));
+    }
 
-        // Обработка литералов и идентификаторов
-        if (ctx.BOOLEAN_LITERAL() != null) {
+    // Обработка одиночного арифметического выражения (например, логика на числе)
+    else if (ctx.arithmetic_expression().size() == 1) {
+        result = visitArithmetic_expression(ctx.arithmetic_expression(0));
+    }
 
-            return ctx.BOOLEAN_LITERAL().getText(); // Возвращаем как есть
-        }
-
-        if (ctx.IDENTIFIER() != null) {
-
-            String identifier = ctx.IDENTIFIER().getText();
-            if (ctx.array_index() != null) {
-                identifier += "[" + visitArray_index(ctx.array_index()) + "]";
-            }
-            return identifier;
-        }
-
-        // Обработка операторов сравнения
-        if (ctx.comparison_operator() != null && ctx.arithmetic_expression().size() == 2) {
-
-            String left = visitArithmetic_expression(ctx.arithmetic_expression(0));
-            String right = visitArithmetic_expression(ctx.arithmetic_expression(1));
-            String temp = newTemp();
-            String op = ctx.comparison_operator().getText();
-
-
-            String trueLabel = newLabel();
-            String endLabel = newLabel();
-
-
-            instructions.add(new Instructions("ifFalse", left, op, right, trueLabel, table));
-            instructions.add(new Instructions("assign", "0", null, temp, table));
-            instructions.add(new Instructions("goto", null, null, endLabel, table));
-            needLabel.add(new Label(trueLabel, instructions.size()));
-            instructions.add(new Instructions("assign", "1", null, temp, table));
-            needLabel.add(new Label(endLabel, instructions.size()));
-
-            Instructions.setIsLogical(false);
-
-            return temp;
-        }
-
-
-        Instructions.setIsLogical(false);
+    else {
         throw new UnsupportedOperationException("Unsupported factor_logical case: " + ctx.getText());
     }
+
+    // Обработка NOT
+    if (isNegated) {
+        String temp = newTemp();
+        String trueLabel = newLabel();
+        String endLabel = newLabel();
+
+        instructions.add(new Instructions("ifTrue", result, null, trueLabel, table));
+        instructions.add(new Instructions("assign", "1", null, temp, table)); // NOT false → true
+        instructions.add(new Instructions("goto", null, null, endLabel, table));
+        needLabel.add(new Label(trueLabel, instructions.size()));
+        instructions.add(new Instructions("assign", "0", null, temp, table)); // NOT true → false
+        needLabel.add(new Label(endLabel, instructions.size()));
+        return temp;
+    }
+
+    return result;
+}
+
     @Override
     public String visitPrint(MyLangParser1.PrintContext ctx) {
         String temp = newTemp();

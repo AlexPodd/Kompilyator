@@ -4,22 +4,20 @@ extern printf
 _200.0 dq 200.0
 _20.0 dq 20.0
 _10.0 dq 10.0
-_5.0 dq 5.0
+_6.0 dq 6.0
+_7.0 dq 7.0
 _0.0 dq 0.0
-_3.0 dq 3.0
-_2.0 dq 2.0
 _1.0 dq 1.0
 гол db "qwety", 10
-результат dq 0.0
+результат dd 0
 qwety db "qwety", 10
 _150.0 dq 150.0
-_minus1.0 dq -1.0
-а dq 200.0
-б dq 400.0
-в dq 150.0
+а dd 200
+б dd 400
+в dd 150
 _qwety db "qwety", 10
-г dq 200.0
-д dq 20.0
+г dd 200
+д dd 20
 _400.0 dq 400.0
 section .bss
 num_buf resb 32
@@ -89,495 +87,493 @@ int_to_str:
     pop rcx
     pop rbx
     ret
+сложноеВычисление:
+    push rbp
+    mov rbp, rsp
+    sub rsp,24
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], EDX
+    mov dword[rbp-16], ECX
+    mov dword[rbp-20], R8D
+    mov dword[rbp-24], 0
+    mov RAX, 0
+    cmp RSI, RAX
+    jne L2
+    sub rsp, 8
+    mov qword[rbp-32], 0
+    mov [rbp-32], RAX
+    mov dword[rbp-16], ECX
+    mov dword[rbp-12], EDX
+    jmp L3
+L2:
+    mov RAX, 1
+    mov [rbp-32], RAX
+    mov [rbp-32], RAX
+L3:
+    mov RAX, [rbp-32]
+    cmp RAX, 0
+    je L1
+    sub rsp,24
+    mov RCX, RDI
+    add RCX, RSI
+    mov EBX, dword [rbp-12]
+    mov EDX, dword [rbp-16]
+    mov RAX, RBX
+    sub RAX, RDX
+    push RDX
+    push RCX
+    push RAX
+    pop RCX
+    pop RAX
+    imul RAX, RCX
+    mov RBX, RAX
+    pop RDX
+    push RDX
+    mov RAX, RBX
+    cqo
+    idiv R8
+    pop RDX
+    sub rsp, 8
+    mov qword[rbp-64], 0
+    leave
+    ret
+    sub rsp,24
+    jmp L0
+L1:
+    sub rsp,24
+    mov RAX, -1
+    mov dword[rbp-24], EAX
+    leave
+    ret
+L0:
+    sub rsp,24
+    mov EAX, dword [rbp-24]
+    leave
+    ret
 цикл_сумма:
     push rbp
     mov rbp, rsp
+    sub rsp,4
+    mov dword[rbp-4], 0
     sub rsp,8
-    movsd xmm0, qword [_0.0]
-    movsd qword [rbp-8], xmm0
-    sub rsp,12
-    mov dword[rbp-12], 1
+    mov dword[rbp-8], 1
+    sub rsp, 8
+    mov qword[rbp-20], 0
     mov RAX, 1
-    mov dword[rbp-12], EAX
-L0:
-    mov EAX, dword [rbp-12]
+    mov dword[rbp-8], EAX
+L4:
+    mov EAX, dword [rbp-8]
     mov RCX, 10
     cmp RAX, RCX
-    jg L3
+    jle L7
     sub rsp, 8
     mov qword[rbp-28], 0
-    movsd xmm0, [rbp-28]
+    mov RBX, 0
+    mov [rbp-28], RBX
+    mov [rbp-28], RBX
+    jmp L8
+L7:
+    mov RAX, 1
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
+L8:
+    mov RAX, [rbp-28]
+    cmp RAX, 0
+    je L5
+    mov ECX, dword [rbp-4]
+    mov EBX, dword [rbp-8]
+    mov RDX, RCX
+    add RDX, RBX
     sub rsp, 8
     mov qword[rbp-36], 0
-    movsd [rbp-36], xmm0
-    movsd [rbp-28], xmm0
-    jmp L4
-L3:
-    push RAX
-    mov rax, 1
-    cvtsi2sd xmm0, rax
-    pop RAX
-    movsd [rbp-36], xmm0
-L4:
-    movsd xmm0, [rbp-36]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L1
-    sub rsp,16
-    mov dword[rbp-16], 1
-    mov RAX, 1
-    mov dword[rbp-16], EAX
-L5:
-    mov EAX, dword [rbp-16]
-    mov RCX, 10
-    cmp RAX, RCX
-    jg L8
-    movsd xmm0, [rbp-28]
-    sub rsp, 8
-    mov qword[rbp-60], 0
-    movsd [rbp-60], xmm0
-    movsd [rbp-28], xmm0
-    jmp L9
-L8:
-    push RAX
-    mov rax, 1
-    cvtsi2sd xmm0, rax
-    pop RAX
-    movsd [rbp-60], xmm0
-L9:
-    movsd xmm0, [rbp-60]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L6
-    movsd xmm1, qword [rbp-8]
-    mov EAX, dword [rbp-16]
-    cvtsi2sd xmm3, RAX
-    movsd xmm2, xmm1
-    addsd xmm2, xmm3
-    movsd qword[rbp-8], xmm2
-L7:
-    mov EAX, dword [rbp-16]
-    mov RCX, 1
-    mov RBX, RAX
-    add RBX, RCX
-    mov dword[rbp-16], EBX
-    jmp L5
+    mov dword[rbp-4], EDX
 L6:
-L2:
-    sub rsp,12
-    mov EAX, dword [rbp-12]
+    mov EAX, dword [rbp-8]
     mov RCX, 1
     mov RBX, RAX
     add RBX, RCX
-    mov dword[rbp-12], EBX
-    jmp L0
-L1:
-    sub rsp,8
-    movsd xmm0, qword [rbp-8]
+    mov dword[rbp-8], EBX
+    jmp L4
+L5:
+    sub rsp,4
+    mov EAX, dword [rbp-4]
     leave
     ret
 арифметикаИБулевы:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    pxor xmm2, xmm2
-    movsd qword [rbp-8], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-16], xmm2
-    movsd xmm2, qword [_minus1.0]
-    movsd qword [rbp-24], xmm2
-    ucomisd xmm0, xmm1
-    jbe L14
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    cmp RDI, RSI
+    jg L13
     sub rsp, 8
-    mov qword[rbp-32], 0
-    movsd xmm2, [rbp-32]
-    movsd qword[rbp-8], xmm0
-    movsd qword[rbp-16], xmm1
-    sub rsp, 8
-    mov qword[rbp-40], 0
-    movsd [rbp-40], xmm2
-    movsd [rbp-32], xmm2
-    jmp L15
+    mov qword[rbp-20], 0
+    mov RAX, 0
+    mov [rbp-20], RAX
+    mov [rbp-20], RAX
+    jmp L14
+L13:
+    mov RAX, 1
+    mov [rbp-20], RAX
+    mov [rbp-20], RAX
 L14:
+    mov RAX, [rbp-20]
+    cmp RAX, 0
+    je L11
+    mov [rbp-20], RAX
+    cmp RDI, RSI
+    je L15
     sub rsp, 8
-    mov qword[rbp-48], 0
-    movsd xmm0, [rbp-48]
-    movsd [rbp-40], xmm0
-    movsd [rbp-48], xmm0
+    mov qword[rbp-28], 0
+    mov RAX, 0
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
+    jmp L16
 L15:
-    movsd xmm0, [rbp-40]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L12
+    mov RAX, 1
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
 L16:
-    movsd xmm0, qword [rbp-8]
-    movsd xmm1, qword [rbp-16]
-    ucomisd xmm0, xmm1
-    jne L19
-    movsd xmm2, [rbp-32]
-    sub rsp, 8
-    mov qword[rbp-56], 0
-    movsd [rbp-56], xmm2
-    movsd [rbp-32], xmm2
-    jmp L20
-L19:
-    movsd xmm0, [rbp-48]
-    movsd [rbp-56], xmm0
-    movsd [rbp-48], xmm0
-L20:
-    movsd xmm0, [rbp-56]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
+    mov RAX, [rbp-28]
+    cmp RAX, 0
     jne L17
+    sub rsp, 8
+    mov qword[rbp-36], 0
+    mov RCX, 1
+    mov [rbp-36], RCX
     jmp L18
 L17:
+    mov RAX, 0
+    mov [rbp-36], RAX
 L18:
+    mov RAX, [rbp-36]
+    cmp RAX, 0
+    je L11
+    sub rsp, 8
+    mov qword[rbp-44], 0
+    mov RCX, 1
+    mov [rbp-44], RCX
+    jmp L12
+L11:
+    mov RAX, 0
+    mov [rbp-44], RAX
+L12:
+    mov RAX, [rbp-44]
+    cmp RAX, 0
+    je L10
+    sub rsp,12
+    mov RCX, RDI
+    add RCX, RSI
+    mov RBX, RDI
+    sub RBX, RSI
+    push RAX
+    mov RAX, RCX
+    imul RAX, RBX
+    mov RDX, RAX
+    pop RAX
+    mov RAX, RDX
+    cqo
+    idiv RSI
+    push RDX
+    cqo
+    idiv RDI
+    mov RCX, RDX
+    pop RDX
     sub rsp, 8
     mov qword[rbp-64], 0
-    movsd xmm0, [rbp-64]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L12
-L21:
-    jmp L13
-L12:
-L13:
-    sub rsp, 8
-    mov qword[rbp-72], 0
-    movsd xmm0, [rbp-72]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L11
-    sub rsp,24
-    movsd xmm1, qword [rbp-8]
-    movsd xmm2, qword [rbp-16]
-    movsd xmm3, xmm1
-    addsd xmm3, xmm2
-    movsd xmm4, xmm1
-    subsd xmm4, xmm2
-    movsd xmm5, xmm3
-    mulsd xmm5, xmm4
-    movsd xmm6, xmm5
-    divsd xmm6, xmm2
-    movsd qword[rbp-24], xmm6
-    sub rsp,24
-    jmp L10
-L11:
+    mov dword[rbp-12], ECX
+    sub rsp,12
+    jmp L9
 L10:
-    movsd xmm0, qword [rbp-24]
+    sub rsp,12
+    mov RAX, -1
+    mov dword[rbp-12], EAX
+L9:
+    sub rsp,12
+    mov EAX, dword [rbp-12]
     leave
     ret
 логика:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd xmm0, qword [_5.0]
-    movsd qword [rbp-8], xmm0
-    movsd xmm0, qword [_5.0]
-    movsd qword [rbp-16], xmm0
-    movsd xmm0, qword [_3.0]
-    movsd qword [rbp-24], xmm0
-    movsd xmm0, qword [rbp-8]
-    movsd xmm1, qword [rbp-16]
-    ucomisd xmm0, xmm1
-    jbe L24
+    sub rsp,12
+    mov dword[rbp-4], 7
+    mov dword[rbp-8], 6
+    mov dword[rbp-12], 0
+    mov EAX, dword [rbp-4]
+    mov ECX, dword [rbp-8]
+    cmp RAX, RCX
+    jg L21
     sub rsp, 8
-    mov qword[rbp-32], 0
-    movsd xmm2, [rbp-32]
+    mov qword[rbp-20], 0
+    mov RBX, 0
+    mov [rbp-20], RBX
+    mov [rbp-20], RBX
+    jmp L22
+L21:
+    mov RAX, 1
+    mov [rbp-20], RAX
+    mov [rbp-20], RAX
+L22:
+    mov RAX, [rbp-20]
+    cmp RAX, 0
+    je L20
+    sub rsp,12
     sub rsp, 8
     mov qword[rbp-40], 0
-    movsd [rbp-40], xmm2
-    movsd [rbp-32], xmm2
+    mov RCX, 1
+    mov dword[rbp-12], ECX
+    mov RAX, RCX
+    leave
+    ret
+    sub rsp,12
+    jmp L19
+L20:
+    mov EAX, dword [rbp-4]
+    mov ECX, dword [rbp-8]
+    cmp RAX, RCX
+    je L24
+    sub rsp, 8
+    mov qword[rbp-60], 0
+    mov RBX, 0
+    mov [rbp-60], RBX
+    mov [rbp-60], RBX
     jmp L25
 L24:
-    sub rsp, 8
-    mov qword[rbp-48], 0
-    movsd xmm0, [rbp-48]
-    movsd [rbp-40], xmm0
-    movsd [rbp-48], xmm0
+    mov RAX, 1
+    mov [rbp-60], RAX
+    mov [rbp-60], RAX
 L25:
-    movsd xmm0, [rbp-40]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L23
-    sub rsp,24
-    movsd xmm1, qword [rbp-24]
-    movsd xmm0, xmm1
+    mov RAX, [rbp-60]
+    cmp RAX, 0
+    je L23
+    sub rsp,12
+    mov RCX, 2
+    mov dword[rbp-12], ECX
+    mov RAX, RCX
     leave
     ret
-    sub rsp,24
-    jmp L22
+    sub rsp,12
+    jmp L19
 L23:
-    movsd xmm0, qword [rbp-8]
-    movsd xmm1, qword [rbp-16]
-    ucomisd xmm0, xmm1
-    jne L27
-    movsd xmm2, [rbp-32]
-    sub rsp, 8
-    mov qword[rbp-104], 0
-    movsd [rbp-104], xmm2
-    movsd [rbp-32], xmm2
-    jmp L28
-L27:
-    movsd xmm0, [rbp-48]
-    movsd [rbp-104], xmm0
-    movsd [rbp-48], xmm0
-L28:
-    movsd xmm0, [rbp-104]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L26
-    sub rsp,24
-    movsd xmm1, qword [rbp-24]
-    movsd xmm0, xmm1
+    sub rsp,12
+    mov RAX, 3
+    mov dword[rbp-12], EAX
     leave
     ret
-    sub rsp,24
-    jmp L22
-L26:
-    sub rsp,24
-    movsd xmm0, qword [rbp-24]
+L19:
+    sub rsp,12
+    mov EAX, dword [rbp-12]
     leave
     ret
-L22:
-    sub rsp,24
-    movsd xmm0, qword [rbp-24]
-    leave
-    ret
-сложноеВычисление:
+факториал:
     push rbp
     mov rbp, rsp
-    sub rsp,48
-    pxor xmm5, xmm5
-    movsd qword [rbp-8], xmm5
-    pxor xmm5, xmm5
-    movsd qword [rbp-16], xmm5
-    pxor xmm5, xmm5
-    movsd qword [rbp-24], xmm5
-    pxor xmm5, xmm5
-    movsd qword [rbp-32], xmm5
-    pxor xmm5, xmm5
-    movsd qword [rbp-40], xmm5
-    movsd xmm5, qword [_minus1.0]
-    movsd qword [rbp-48], xmm5
-    movsd xmm5, [_0.0]
-    ucomisd xmm1, xmm5
-    je L31
+    sub rsp,4
+    mov dword[rbp-4], EDI
+    mov RAX, 1
+    cmp RDI, RAX
+    je L27
     sub rsp, 8
-    mov qword[rbp-56], 0
-    movsd xmm6, [rbp-56]
-    movsd qword[rbp-8], xmm0
-    movsd qword[rbp-16], xmm1
-    movsd qword[rbp-24], xmm2
-    movsd qword[rbp-32], xmm3
-    movsd qword[rbp-40], xmm4
-    sub rsp, 8
-    mov qword[rbp-64], 0
-    movsd [rbp-64], xmm6
-    movsd [rbp-56], xmm6
-    jmp L32
-L31:
-    sub rsp, 8
-    mov qword[rbp-72], 0
-    movsd xmm0, [rbp-72]
-    movsd [rbp-64], xmm0
-    movsd [rbp-72], xmm0
-L32:
-    movsd xmm0, [rbp-64]
-    xorpd xmm15, xmm15
-    ucomisd xmm0, xmm15
-    jne L30
-    sub rsp,48
-    movsd xmm1, qword [rbp-8]
-    movsd xmm2, qword [rbp-16]
-    movsd xmm3, xmm1
-    addsd xmm3, xmm2
-    movsd xmm4, qword [rbp-24]
-    movsd xmm5, qword [rbp-32]
-    movsd xmm6, xmm4
-    subsd xmm6, xmm5
-    movsd xmm7, xmm3
-    mulsd xmm7, xmm6
-    movsd xmm0, qword [rbp-40]
-    movsd xmm1, xmm7
-    divsd xmm1, xmm0
-    movsd xmm0, xmm1
+    mov qword[rbp-12], 0
+    mov RCX, 0
+    mov [rbp-12], RCX
+    mov [rbp-12], RCX
+    jmp L28
+L27:
+    mov RAX, 1
+    mov [rbp-12], RAX
+    mov [rbp-12], RAX
+L28:
+    mov RAX, [rbp-12]
+    cmp RAX, 0
+    je L26
+    sub rsp,4
+    mov RCX, 1
+    mov RAX, RCX
     leave
     ret
-    sub rsp,48
-    jmp L29
-L30:
-    sub rsp,48
-    movsd xmm0, qword [rbp-48]
-    leave
-    ret
-L29:
-    sub rsp,48
-    movsd xmm0, qword [rbp-48]
+L26:
+    sub rsp,4
+    mov RAX, 1
+    mov RCX, RDI
+    sub RCX, RAX
+    mov dword[rbp-4], EDI
+    mov RDI, RCX
+sub rsp, 4
+    call факториал
+    add rsp, 4
+    mov ECX, dword [rbp-4]
+    push RDX
+    imul RAX, RCX
+    mov RBX, RAX
+    pop RDX
+    mov RAX, RBX
     leave
     ret
 сумма:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    pxor xmm2, xmm2
-    movsd qword [rbp-8], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-16], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-24], xmm2
-    movsd xmm2, xmm0
-    addsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    mov RAX, RDI
+    add RAX, RSI
+    sub rsp, 8
+    mov qword[rbp-20], 0
     leave
     ret
 разность:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    pxor xmm2, xmm2
-    movsd qword [rbp-8], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-16], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-24], xmm2
-    movsd xmm2, xmm0
-    subsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    mov RAX, RDI
+    sub RAX, RSI
+    sub rsp, 8
+    mov qword[rbp-20], 0
     leave
     ret
 умножение:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    pxor xmm2, xmm2
-    movsd qword [rbp-8], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-16], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-24], xmm2
-    movsd xmm2, xmm0
-    mulsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    push RDX
+    mov RAX, RDI
+    imul RAX, RSI
+    pop RDX
+    sub rsp, 8
+    mov qword[rbp-20], 0
     leave
     ret
 деление:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    pxor xmm2, xmm2
-    movsd qword [rbp-8], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-16], xmm2
-    pxor xmm2, xmm2
-    movsd qword [rbp-24], xmm2
-    movsd xmm2, xmm0
-    divsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    push RDX
+    mov RAX, RDI
+    cqo
+    idiv RSI
+    pop RDX
+    sub rsp, 8
+    mov qword[rbp-20], 0
     leave
     ret
 _start:
     push rbp
     mov rbp, rsp
     sub rsp,0
-    movq xmm0, [а]
-    movq xmm1, [б]
+    mov EDI, [а]
+    mov ESI, [б]
 sub rsp, 8
     call сумма
     add rsp, 8
-    mov rdi, fmtGlobal
-    sub rsp, 8
-    mov eax, 1
-    call printf
-    add rsp, 8
-    movsd [результат], xmm0
-    movq xmm0, [а]
-    movq xmm1, [б]
-sub rsp, 8
-    call разность
-    add rsp, 8
-    mov rdi, fmtGlobal
-    sub rsp, 8
-    mov eax, 1
-    call printf
-    add rsp, 8
-    movsd [результат], xmm0
-    movq xmm0, [а]
-    movq xmm1, [б]
-sub rsp, 8
-    call умножение
-    add rsp, 8
-    mov rdi, fmtGlobal
-    sub rsp, 8
-    mov eax, 1
-    call printf
-    add rsp, 8
-    movsd [результат], xmm0
-    movq xmm0, [а]
-    movq xmm1, [б]
-sub rsp, 8
-    call деление
-    add rsp, 8
-    mov rdi, fmtGlobal
-    sub rsp, 8
-    mov eax, 1
-    call printf
-    add rsp, 8
-    movsd [результат], xmm0
-    movq xmm0, [а]
-    movq xmm1, [б]
-    movq xmm2, [в]
-    movq xmm3, [г]
-    movq xmm4, [д]
-sub rsp, 8
-    call сложноеВычисление
-    add rsp, 8
     sub rsp, 8
     mov qword[rbp-8], 0
-    movsd xmm0, [rbp-8]
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 0
+    call разность
     add rsp, 0
-    movsd [результат], xmm0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 0
+    call умножение
+    add rsp, 0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 0
+    call деление
+    add rsp, 0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov RDI, 10
+sub rsp, 0
+    call факториал
+    add rsp, 0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+    mov EDX, [в]
+    mov ECX, [г]
+    mov R8D, [д]
+sub rsp, 0
+    call сложноеВычисление
+    add rsp, 0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
 sub rsp, 0
     call цикл_сумма
     add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movq xmm0, [а]
-    movq xmm1, [б]
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
 sub rsp, 0
     call арифметикаИБулевы
     add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov RDI, 25
+    mov RSI, 12
 sub rsp, 0
     call арифметикаИБулевы
     add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
 sub rsp, 0
     call логика
     add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
     mov rax, 60
     syscall

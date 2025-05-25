@@ -243,13 +243,7 @@
         }
 
         private void generateCode(List<Block> blocks){
-            System.out.println();
-            for(Block block: blocks) {
-                Block optimized = block.getOptimized();
-                for(Instructions instructions: optimized.getInstructions()){
-                    System.out.println(instructions);
-                }
-            }
+         
             System.out.println();
             CodeGen gen = null;
             for(Block block: blocks) {
@@ -258,9 +252,9 @@
                 block.getOptimized().lifeAnalyses();
 
                 Register r1 = null,r2 = null,r3 = null;
-
+                
                 for(Instructions instruction: block.getOptimized().getInstructions()){
-                     // command.add(instruction.toString());
+                 //    command.add(instruction.toString());
                     if(table != instruction.getMyTable()){
                         table = instruction.getMyTable();
                         stackManager.newBlockLocalVariable(table.getOffset(), table);
@@ -311,6 +305,28 @@
                                 r2.setUsed(false);
                             }
                             gen.generateIfFalse(r1, r2, instruction);
+                        }
+                        case IFTRUE -> {
+                            RegisterAllocator allocator;
+                            if(instruction.getTypeArg1().equals(TypeName.FLOAT)){
+                                gen = codeGenFLOAT;
+                                codeGenFLOAT.setTable(table);
+                                allocator = registerAllocatorXMM;
+                            }
+                            else {
+                                gen = codeGenINT;
+                                codeGenINT.setTable(table);
+                                allocator = registerAllocator;
+                            }
+                            r1=choseReg(instruction.getArg1(),false, instruction, allocator, gen);
+                            r2=choseReg(instruction.getArg2(),false, instruction, allocator ,gen);
+                            if(r1 != null){
+                                r1.setUsed(false);
+                            }
+                            if(r2 != null){
+                                r2.setUsed(false);
+                            }
+                            gen.generateIfTrue(r1, r2, instruction);
                         }
                         default -> {
                             r1=choseRegg(instruction.getArg1(),false, instruction, gen, instruction.getTypeArg1());
@@ -591,6 +607,22 @@
             }
         }
 
+        public Register findInRegParamINT(String var){
+            for(Register register: argRegs){
+                if(register.contain(var)){
+                    return register;
+                }
+            }
+            return null;
+        }
+        public Register findInRegParamFLOAT(String var){
+                for(Register register: argRegsFloat){
+                if(register.contain(var)){
+                    return register;
+                }
+            }
+            return null;
+        }
         public RegisterAllocator getRegisterAllocatorXMM() {
             return registerAllocatorXMM;
         }

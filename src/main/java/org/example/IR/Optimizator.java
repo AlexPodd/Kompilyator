@@ -113,8 +113,15 @@ public class Optimizator {
                 blocks.get(i).addNextBlock(blocks.get(i+1));
             }
         }
-
-
+         
+        for (Block block : blocks) {
+            System.out.println("---NEW BLOCK---");
+            for(Instructions instruction1: block.getInstructions()){
+                System.out.println(instruction1+" "+instruction1.isMyLogical()+" "+instruction1.isInsideConditional());
+            }
+            System.out.println("---------------");
+        } 
+        
         lifeAnalyses();
 
     }

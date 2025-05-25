@@ -49,14 +49,18 @@ public class DAG {
             if(instructions.isMyLogical()){
                 operationNode.setLogical(true);
             }
-
+            if(instructions.isInsideConditional()){
+                operationNode.setConditional(true);
+            }
 
             operationNode.addVar(instructions.getResult());
+            operationNode.getLabels().addAll(instructions.getLabels()); 
         }
 
 
         constant();
         removeUnusedNodes(block.getLiveVariables());
+        
     }
 
     private void removeUnusedNodes(ArrayList<String> liveVariables) {
@@ -72,7 +76,7 @@ public class DAG {
                 if (node.operator.equals(Operator.PARAM)){
                     continue;
                 }
-                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO) || node.isLogical){
+                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO) || node.isLogical || node.isConditional){
                     continue;
                 }
 
@@ -98,9 +102,10 @@ public class DAG {
 
     private void constant(){
         for(Node node: nodes){
-            if(node.isVarNode || node.isLoopNode || node.isLogical){
+            if(node.isVarNode || node.isLoopNode || node.isLogical || node.isConditional){
                 continue;
             }
+        
             if(node.operator.equals(Operator.ASSIGN)){
                 if(node.left.isVarNode){
                     for(String var: node.variables){
@@ -275,6 +280,7 @@ public class DAG {
 
         Instructions instructions1 =new Instructions(node.operator, left,node.comprassion, right, result, node.getMyTable());
         instructions1.setMyLogical(node.isLogical);
+        instructions1.getLabels().addAll(node.getLabels());
         instructions.add(instructions1);
 
 
@@ -299,7 +305,7 @@ public class DAG {
 
     }
 
-  /*  public void printDAG() {
+    public void printDAG() {
         System.out.println("=== DAG ===");
         for (Node node : nodes) {
             System.out.print("Node: " + node.root);
@@ -322,7 +328,7 @@ public class DAG {
         }
         System.out.println("================");
     }
-*/
+
     private Node getNode(String var) {
         for (Node node : nodes) {
             if (node.isVarNode && node.root.equals(var)) {
@@ -388,11 +394,15 @@ public class DAG {
     class Node {
         private final ArrayList<Node> parents;
         private ArrayList<String> variables;
+        private ArrayList<String> labels;
+    
         private String root;
         private Node left;
         private Node right;
         private Operator operator;
         private boolean isVarNode;
+
+        private boolean isConditional;
 
         private boolean isLoopNode = false;
 
@@ -408,6 +418,13 @@ public class DAG {
 
         public boolean isLogical() {
             return isLogical;
+        }
+        public boolean isConditional() {
+            return isConditional;
+        }
+
+        public void setConditional(boolean isConditional) {
+            this.isConditional = isConditional;
         }
 
         public void setLogical(boolean logical) {
@@ -426,6 +443,7 @@ public class DAG {
             this.isVarNode = false;
             this.parents = new ArrayList<>();
             this.variables = new ArrayList<>();
+            this.labels = new ArrayList<>();
         }
 
         public Node(String root) {
@@ -433,12 +451,16 @@ public class DAG {
             this.isVarNode = true;
             this.parents = new ArrayList<>();
             this.variables = new ArrayList<>();
+            this.labels = new ArrayList<>();
         }
 
         public void addParent(Node parent) {
             parents.add(parent);
         }
 
+        public ArrayList<String> getLabels(){
+            return labels;
+        }
         public void addVar(String var) {
             if (!variables.contains(var)) {
                 variables.add(var);

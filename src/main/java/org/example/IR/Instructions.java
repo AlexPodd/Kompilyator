@@ -55,6 +55,7 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
+        myInsideConditional = insideConditional;
         setType();
     }
     public Instructions(Operator op, String arg1, String arg2, String result, SymbolTable table) {
@@ -68,6 +69,8 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
+
+        myInsideConditional = insideConditional;
         setType();
     }
 
@@ -83,6 +86,8 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
+
+        myInsideConditional = insideConditional;
         setType();
     }
 
@@ -98,8 +103,20 @@ public class Instructions {
         inc();
         myInLoop = isLoop;
         myLogical = isLogical;
+
+        myInsideConditional = insideConditional;
         setType();
     }
+
+private static boolean insideConditional = false;
+private boolean myInsideConditional;
+public static void setInsideConditional(boolean flag) {
+    insideConditional = flag;
+}
+
+public boolean isInsideConditional() {
+    return myInsideConditional;
+}
 
     private void setType(){
         typeArg1 = findType(arg1);
@@ -350,9 +367,9 @@ public class Instructions {
     @Override
     public String toString() {
         // Форматируем строку с фиксированными отступами
-        String formattedLabel = labels.isEmpty() != false ? String.format("%-4s", labels) : "    ";
-        String formattedNumber = String.format("%-3d", myNumber);
-
+ String labelStr = labels.isEmpty() ? "" : String.join(",", labels);
+    String formattedLabel = String.format("%-10s", labelStr);  // до 10 символов под метки
+    String formattedNumber = String.format("%-3d", myNumber);
         // Форматируем аргументы в зависимости от типа операции
         String operationLine;
         switch (op) {
@@ -367,8 +384,8 @@ public class Instructions {
                 break;
             case IFFALSE:
             case IFTRUE:
-                operationLine = String.format("%-7s %-5s, %-5s, %-5s",
-                        op.name().toLowerCase(), arg1, arg2, result);
+                operationLine = String.format("%-7s %-5s, %-5s, %-5s, %-5s",
+                        op.name().toLowerCase(), arg1, compOp ,arg2, result);
                 break;
             case FOR:
             case AND:

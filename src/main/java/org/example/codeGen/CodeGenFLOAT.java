@@ -126,6 +126,38 @@ private final Register xmm0;
 
 
     @Override
+public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
+
+    if (!r1.isHasValue()) generateLoad(instruction.getArg1(), r1);
+    Register actualR1 = castOperation(r1);
+
+    if (instruction.getCompOp() == null) {
+        command.add("    xorpd xmm15, xmm15");  // xmm15 = 0.0
+        command.add("    ucomisd " + actualR1.getName() + ", xmm15");
+        command.add("    je " + instruction.getResult());  // если равно 0 → это false → не jump
+        return;
+    }
+
+    if (!r2.isHasValue()) generateLoad(instruction.getArg2(), r2);
+    Register actualR2 = castOperation(r2);
+
+    // сравнение вещественных
+    command.add("    ucomisd " + actualR1.getName() + ", " + actualR2.getName());
+
+    String com = "";
+    switch (instruction.getCompOp()) {
+        case LESS -> com = "jb";      // below → <
+        case LESS_EQUAL -> com = "jbe";   // below or equal → <=
+        case EQUAL -> com = "je";     // equal → ==
+        case NOT_EQUAL -> com = "jne"; // not equal → !=
+        case GREATER_EQUAL -> com = "jae"; // above or equal → >=
+        case MORE -> com = "ja";      // above → >
+    }
+
+    command.add("    " + com + " " + instruction.getResult());
+}
+
+    @Override
     public void generateAssign(Instructions instruction) {
             String result = instruction.getResult();
             String coppy = instruction.getArg1();

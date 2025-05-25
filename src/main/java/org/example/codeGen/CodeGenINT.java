@@ -131,7 +131,7 @@ public class CodeGenINT extends AbstractCodeGen{
 
         if(instruction.getCompOp() == null){
             command.add("    cmp "+ r1.getName()+", "+"0");
-            command.add("    "+"jne"+" " + instruction.getResult());
+            command.add("    "+"je"+" " + instruction.getResult());
             return;
         }
 
@@ -151,13 +151,40 @@ public class CodeGenINT extends AbstractCodeGen{
         command.add("    "+com+" " + instruction.getResult());
     }
 
+        @Override
+public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
+    if (!r1.isHasValue()) generateLoad(instruction.getArg1(), r1);
+
+    if (instruction.getCompOp() == null) {
+        // Простое логическое значение, например: ifTrue x → jump if x != 0
+        command.add("    cmp " + r1.getName() + ", 0");
+        command.add("    jne " + instruction.getResult()); // если не 0 → jump
+        return;
+    }
+
+    if (!r2.isHasValue()) generateLoad(instruction.getArg2(), r2);
+
+    String jump = "";
+    switch (instruction.getCompOp()) {
+        case LESS -> jump = "jl";           // <
+        case LESS_EQUAL -> jump = "jle";    // <=
+        case EQUAL -> jump = "je";          // ==
+        case NOT_EQUAL -> jump = "jne";     // !=
+        case GREATER_EQUAL -> jump = "jge"; // >=
+        case MORE -> jump = "jg";           // >
+    }
+
+    command.add("    cmp " + r1.getName() + ", " + r2.getName());
+    command.add("    " + jump + " " + instruction.getResult());
+}
+    
 
     @Override
         // res = arg1
     public void generateAssign(Instructions instruction) {
         String result = instruction.getResult();
         String coppy = instruction.getArg1();
-
+        
         Register temp = registerAllocator.containVar(result);
 
         if (temp != null) {
@@ -165,16 +192,16 @@ public class CodeGenINT extends AbstractCodeGen{
         }
 
         Register r1 = registerAllocator.getReg(coppy, table,instruction);
-
         SymbolInfo info = table.find(result);
         if(info != null){
             info.changeValue(r1.getName());
         }
         r1.addVarVirtual(result);
 
-
+        stackManager.addTempToStack(result);
         if(!r1.isHasValue()){
             generateLoad(coppy, r1);
+            generateStore(result, r1);
         }
     }
 

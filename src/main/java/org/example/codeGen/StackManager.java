@@ -42,23 +42,36 @@ public class StackManager {
                     continue;
                 }
                 localStackOffset.put(key, value.getOffset());
-
+                
+                
+              //  generator.addCommand("LOCAL "+ key+" "+value.getOffset());
                 switch (value.getType()){
                     case INTEGER -> {
-                        if(value.getValue() != null){
-                            generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + value.getValue());
+                        Register register = generator.findInRegParamINT(key);
+                        if(register != null){
+                            generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + register.getNameLoad(4));
                         }else {
-                            generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + "0");
+                            if(value.getValue() != null){
+                                    generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + value.getValue());
+                            }else{
+                                    generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + "0");
+                            }
                         }
                     }
                     case FLOAT -> {
+                        Register register = generator.findInRegParamFLOAT(key);
                         Register empty =  generator.getRegisterAllocatorXMM().getEmptyXMMReg();
-                        if(value.getValue() != null){
-                            generator.addCommand("    movsd "+empty.getName()+", qword ["+valueToText(value.getValue())+"]");
-                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], " + empty.getName());
+                        if(register != null){
+                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], " + register.getName());
                         }else {
-                            generator.addCommand("    pxor "+empty.getName()+", "+empty.getName());
+                            if(value.getValue() != null){
+                                                            generator.addCommand("    movsd "+empty.getName()+", qword ["+valueToText(value.getValue())+"]");
+                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], " + empty.getName());
+                            }
+                            else{
+                                    generator.addCommand("    pxor "+empty.getName()+", "+empty.getName());
                             generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], "+empty.getName());
+                            }
                         }
                     }
                 }
@@ -90,10 +103,14 @@ public class StackManager {
         int padding = (16 - (totalAfterCall % 16)) % 16;
         return padding;
     }
-    private int addTempToStack(String var){
+    public int addTempToStack(String var){
+        if(tempStackOffset.get(var) != null){
+            return tempStackOffset.get(var);
+        }
         stackTop -= 8;
         generator.addCommand("    sub rsp, "+8);
         generator.addCommand("    mov "+sizeOfReg(8)+"[rbp" + stackTop + "], " + "0");
+      //  generator.addCommand("TEMP "+ var+" "+stackTop);
         tempStackOffset.put(var, stackTop);
         return stackTop;
     }

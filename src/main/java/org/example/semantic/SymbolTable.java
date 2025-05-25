@@ -27,7 +27,7 @@ public class SymbolTable {
         if(isGlobal){
             global = this;
         }
-   //     boolConst();
+        boolConst();
     }
 
     public SymbolTable getGlobal() {
@@ -47,20 +47,13 @@ public class SymbolTable {
     }
 
     private void boolConst(){
-        SymbolInfo infoTrue = new SymbolInfo(TypeName.BOOLEAN,1);
-        SymbolInfo infoFalse = new SymbolInfo(TypeName.BOOLEAN,0);
-
         SymbolInfo infoTrue1 = new SymbolInfo(TypeName.INTEGER,1);
         SymbolInfo infoFalse1 = new SymbolInfo(TypeName.INTEGER,0);
-        infoTrue.setConst(true);
-        infoFalse.setConst(true);
         infoTrue1.setConst(true);
         infoFalse1.setConst(true);
 
-        declaration("правда", infoTrue, false);
         declaration("0", infoFalse1, false);
         declaration("1", infoTrue1, false);
-        declaration("ложь", infoFalse, false);
     }
 
 
@@ -219,6 +212,7 @@ public class SymbolTable {
     public SymbolTable exitScope() {
         return parent;
     }
+
 
 
 }

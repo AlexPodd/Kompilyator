@@ -77,6 +77,11 @@ public class Block {
     public void createDag() {
         DAG dag = new DAG(this);
         optimized = dag.generateNewBlock();
+        System.out.println("---OPTIMIZED---");
+        for(Instructions instruction: optimized.instructions){
+            System.out.println(instruction);
+        }
+        System.out.println("---END---");
     }
 
     public void lifeAnalyses() {
