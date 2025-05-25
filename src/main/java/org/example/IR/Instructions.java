@@ -129,13 +129,20 @@ public boolean isInsideConditional() {
 
     }
     private TypeName findType(String arg){
+        if(arg == null){
+        return null;
+        }
         SymbolInfo info = myTable.find(arg);
+
         if(info != null){
             return info.getType();
         }
         return tempType.get(arg);
     }
     private TypeName calcType(TypeName type1, TypeName type2, String result){
+        if(result == null){
+            return TypeName.NULL;
+        }
         if (TypeName.FLOAT.equals(type1) || TypeName.FLOAT.equals(type2)) {
             tempType.put(result, TypeName.FLOAT);
             return TypeName.FLOAT;

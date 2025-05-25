@@ -13,9 +13,17 @@ public class IntegerType extends AbstractType{
 
     @Override
     public boolean SingleExpressionChecker(MyLangParser1.SingleExpressionContext context, SymbolTable table) {
+        if(context.literal() != null) {
+            if (context.literal().INTEGER_LITERAL() != null) {
+                if (!table.isGlobal()) {
+                    table.declareConstant(context.literal().getText(), TypeName.INTEGER);
+                }
+                table.getGlobal().declateConstToData(context.literal().getText(), TypeName.FLOAT);
+            }
+        }
+
         if(context.literal() != null){
             if(context.literal().INTEGER_LITERAL() != null){
-                table.declareConstant(context.getText(), TypeName.INTEGER);
                 return true;
             }
             if(context.literal().NULL_LITERAL() != null){

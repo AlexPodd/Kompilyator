@@ -26,8 +26,11 @@ public class StackManager {
         stackInit(table);
     }
     public void newBlockLocalVariable(int sizeOfLocalVariable, SymbolTable table){
-        stackTop+=sizeOfLocalVariable;
-        generator.addCommand("    sub rsp,"+Math.abs(sizeOfLocalVariable));
+        if (stackTop < sizeOfLocalVariable) {
+            generator.addCommand("    sub rsp, " + (sizeOfLocalVariable - stackTop) + " ; резерв под локальные");
+        }
+
+        stackTop=sizeOfLocalVariable;
         stackInit(table);
     }
     private void stackInit(SymbolTable table){
@@ -62,15 +65,15 @@ public class StackManager {
                         Register register = generator.findInRegParamFLOAT(key);
                         Register empty =  generator.getRegisterAllocatorXMM().getEmptyXMMReg();
                         if(register != null){
-                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], " + register.getName());
+                            generator.addCommand("    movsd "+"[rbp" + offsetToText(value.getOffset()) + "], " + register.getName());
                         }else {
                             if(value.getValue() != null){
-                                                            generator.addCommand("    movsd "+empty.getName()+", qword ["+valueToText(value.getValue())+"]");
-                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], " + empty.getName());
+                                                            generator.addCommand("    movsd "+empty.getName()+", ["+valueToText(value.getValue())+"]");
+                            generator.addCommand("    movsd "+"[rbp" + offsetToText(value.getOffset()) + "], " + empty.getName());
                             }
                             else{
                                     generator.addCommand("    pxor "+empty.getName()+", "+empty.getName());
-                            generator.addCommand("    movsd qword "+"[rbp" + offsetToText(value.getOffset()) + "], "+empty.getName());
+                            generator.addCommand("    movsd "+"[rbp" + offsetToText(value.getOffset()) + "], "+empty.getName());
                             }
                         }
                     }
@@ -110,7 +113,7 @@ public class StackManager {
         stackTop -= 8;
         generator.addCommand("    sub rsp, "+8);
         generator.addCommand("    mov "+sizeOfReg(8)+"[rbp" + stackTop + "], " + "0");
-      //  generator.addCommand("TEMP "+ var+" "+stackTop);
+        //     generator.addCommand("TEMP "+ var+" "+stackTop);
         tempStackOffset.put(var, stackTop);
         return stackTop;
     }
@@ -160,13 +163,14 @@ public class StackManager {
         return "    mov "+sizeOfReg(info.getSize())+"[rbp" + offsetToText(localStackOffset.get(name)) + "], " + regName;
     }
 
-    public String loadLocalXMMFromStack(String name,SymbolInfo info, Register reg) {
+    public String loadLocalXMMFromStack(String name, SymbolInfo info, Register reg) {
         localStackOffset.computeIfAbsent(name, k -> info.getOffset());
-        return "    movsd " + reg.getNameLoad(info.getSize()) + ", "+sizeOfReg(info.getSize())+ " [rbp" + offsetToText(localStackOffset.get(name)) + "]";
+        return "    movsd " + reg.getName() + ", [rbp" + offsetToText(localStackOffset.get(name)) + "]";
     }
-    public String storeLocalXMMStack(String name,SymbolInfo info, String regName) {
+
+    public String storeLocalXMMStack(String name, SymbolInfo info, String regName) {
         localStackOffset.computeIfAbsent(name, k -> info.getOffset());
-        return "    movsd "+sizeOfReg(info.getSize())+"[rbp" + offsetToText(localStackOffset.get(name)) + "], " + regName;
+        return "    movsd [rbp" + offsetToText(localStackOffset.get(name)) + "], " + regName;
     }
 
 

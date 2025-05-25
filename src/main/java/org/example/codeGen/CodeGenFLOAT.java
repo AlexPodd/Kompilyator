@@ -120,7 +120,7 @@ private final Register xmm0;
             }
 
 
-            
+
         command.add("    " + com + " " + instruction.getResult());
     }
 
@@ -173,13 +173,16 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
             SymbolInfo info = table.find(result);
             if(info != null){
                 info.changeValue(r1.getName());
+            }else {
+                stackManager.addTempToStack(result);
             }
             r1.addVarVirtual(result);
 
 
-            if(!r1.isHasValue()){
-                generateLoad(coppy, r1);
-            }
+        if(!r1.isHasValue()){
+            generateLoad(coppy, r1);
+            generateStore(result, r1);
+        }
     }
 
 
@@ -209,11 +212,11 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
         if(info.isConst()) return;
 
         if(info.isGlobal()){
-            command.add("    movsd "+"["+var+"]"+", " + reg.getNameLoad(info.getSize()));
+            command.add("    movsd "+"["+var+"]"+", " + reg.getName());
             info.addPlace("global");
             return;
         }
-        command.add(stackManager.storeLocalXMMStack(var ,info, reg.getNameLoad(info.getSize())));
+        command.add(stackManager.storeLocalXMMStack(var ,info, reg.getName()));
         info.addPlace("stack");
     }
     @Override
@@ -222,6 +225,13 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
         if(reg.contain(var) && reg.isHasValue()){
             return;
         }
+
+        try {
+            info = table.getGlobal().find(valueToText(var));
+        } catch (Exception e){
+            System.out.println(e);
+        }
+
 
         if(info == null){
             command.add(stackManager.loadFromStackTemp(var, reg.getName()));
@@ -244,7 +254,7 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
             return;
         }
         if(info.isGlobal()){
-            command.add("    movq "+reg.getName()+", " +"["+ var+"]");
+            command.add("    movsd "+reg.getName()+", " +"["+ var+"]");
             info.addPlace(reg.getName());
             reg.addVar(var);
             reg.setHasValue(true);
@@ -263,7 +273,7 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
     @Override
     public void generatePrint(Register reg, String var) {
         command.add("    mov rdi, fmtGlobal");
-        
+
         boolean cont = xmm0.contain(var);
         Register temp = null;
         if(!cont){
@@ -273,19 +283,19 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
         }
 
         int padding = stackManager.alignStackCall();
-        
+
         command.add("    sub rsp, "+padding);
-        
+
         command.add("    mov eax, 1");
         command.add("    call printf");
-      
+
         command.add("    add rsp, "+padding);
-      
-        
+
+
         if(!cont){
             command.add("    movsd xmm0, "+temp.getName());
         }
-    } 
+    }
     @Override
     public void generateModulo(Register result, Register reg1, Register reg2) {
 

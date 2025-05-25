@@ -26,6 +26,20 @@ public class FloatType extends AbstractType{
     @Override
     public boolean SingleExpressionChecker(MyLangParser1.SingleExpressionContext context, SymbolTable table) {
         if(context.literal() != null){
+            if(context.literal().INTEGER_LITERAL() != null){
+                    if(!table.isGlobal()){
+                        table.declareConstant(context.literal().getText(), TypeName.INTEGER);
+                    }
+                    table.getGlobal().declateConstToData(context.literal().getText(), TypeName.FLOAT);
+            }
+            if(context.literal().FLOAT_LITERAL() != null){
+                    if(!table.isGlobal()){
+                        table.declareConstant(context.literal().getText(), TypeName.FLOAT);
+                    }
+                    table.getGlobal().declateConstToData(context.literal().getText(), TypeName.FLOAT);
+            }
+
+
             return context.literal().INTEGER_LITERAL() != null || context.literal().NULL_LITERAL() != null || context.literal().FLOAT_LITERAL() != null;
         }
 

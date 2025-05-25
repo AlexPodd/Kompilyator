@@ -254,7 +254,7 @@
                 Register r1 = null,r2 = null,r3 = null;
                 
                 for(Instructions instruction: block.getOptimized().getInstructions()){
-                 //    command.add(instruction.toString());
+                    //   command.add(instruction.toString());
                     if(table != instruction.getMyTable()){
                         table = instruction.getMyTable();
                         stackManager.newBlockLocalVariable(table.getOffset(), table);
@@ -491,6 +491,15 @@
                 String arg = argQueue.get(i);
                 SymbolInfo info = table.find(arg);
 
+                    if (info == null) {
+                        try {
+                            info = globalTable.find(valueToText(arg));
+                        } catch (Exception e) {
+                            System.out.println(e);
+                        }
+                    }
+
+
                 if (info == null){
                     for (Register r : registerAllocator.getRegisters()) {
                         if (r.contain(arg)) {
@@ -591,8 +600,9 @@
             }
             command.add("    add rsp, " + needToAlign);
             // Если есть возвращаемое значение, сохранить в temp переменную
-            if (instruction.getResult() != null) {
-                switch (instruction.getTypeResult()) {
+            TypeName typeReturn = globalTable.findReturnType(instruction.getArg1());
+            if (!typeReturn.equals(TypeName.NULL)) {
+                switch (typeReturn) {
                     case FLOAT -> {
                         xmm0.clear();
                         xmm0.addVar(instruction.getResult());
@@ -660,6 +670,15 @@
 
         public void addCommand(String commanda){
             command.add(commanda);
+        }
+
+        private String valueToText(Object val) {
+            double num = Double.parseDouble((String) val);
+            if (num < 0) {
+                return "_minus" + Math.abs(num);
+            } else {
+                return "_"+num;
+            }
         }
 
         public ArrayList<String> getCommandList(){

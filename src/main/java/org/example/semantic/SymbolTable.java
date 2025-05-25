@@ -115,6 +115,7 @@ public class SymbolTable {
         table.put(ID, symbolInfo);
     }
     public void declareConstant(String IDValue, TypeName typeName){
+        System.out.println(IDValue);
         if(find(IDValue) != null){
             return;
         }
@@ -123,6 +124,11 @@ public class SymbolTable {
         table.put(IDValue, info);
 
     }
+
+    public boolean isGlobal() {
+        return isGlobal;
+    }
+
     private int offsetSize(TypeName type) {
         switch (type){
             default -> {

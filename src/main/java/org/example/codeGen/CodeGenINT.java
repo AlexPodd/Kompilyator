@@ -196,9 +196,11 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
         if(info != null){
             info.changeValue(r1.getName());
         }
+        else {
+            stackManager.addTempToStack(result);
+        }
         r1.addVarVirtual(result);
 
-        stackManager.addTempToStack(result);
         if(!r1.isHasValue()){
             generateLoad(coppy, r1);
             generateStore(result, r1);

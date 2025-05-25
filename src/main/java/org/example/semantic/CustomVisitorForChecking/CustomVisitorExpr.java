@@ -47,6 +47,7 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
             return null;
         }
 
+
         return super.visitFactor(ctx);
     }
 
@@ -198,6 +199,27 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
         for (int i = 0; i < ctx.arguments().expression().size(); i++) {
             TypeName expectedType = funcInfo.getParams().get(i);
             MyLangParser1.ExpressionContext argument = ctx.arguments().expression(i);
+            if(argument.singleExpression() != null){
+                if(argument.singleExpression().literal() != null){
+                    if(argument.singleExpression().literal().FLOAT_LITERAL() != null){
+                        if(table.isGlobal()){
+                            table.declateConstToData(argument.singleExpression().literal().getText(), TypeName.FLOAT);
+                        }else {
+                            table.declareConstant(argument.singleExpression().literal().getText(), TypeName.FLOAT);
+                        }
+                    }
+                    if(argument.singleExpression().literal().INTEGER_LITERAL() != null){
+                        if(table.isGlobal()){
+                            table.declateConstToData(argument.singleExpression().literal().getText(), TypeName.INTEGER);
+                            table.declareConstant(argument.singleExpression().literal().getText(), TypeName.INTEGER);
+                        }else {
+                            table.declareConstant(argument.singleExpression().literal().getText(), TypeName.INTEGER);
+                        }
+                    }
+                }
+            }
+
+            System.out.println(argument.getText());
             utilz.checkTypes(expectedType, null, argument, table);
         }
 

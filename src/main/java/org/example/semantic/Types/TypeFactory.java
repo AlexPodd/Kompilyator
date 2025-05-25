@@ -13,17 +13,19 @@ public class TypeFactory implements TypeFactoryInterface{
                 legalType.add(TypeName.BOOLEAN);
                 return new BooleanType(typeName, legalType);
             }
+            case INTEGER -> {
+                legalType.add(TypeName.INTEGER);
+                legalType.add(TypeName.NULL);
+                return new IntegerType(typeName, legalType);
+            }
+
             case FLOAT -> {
                 legalType.add(TypeName.FLOAT);
                 legalType.add(TypeName.INTEGER);
                 legalType.add(TypeName.NULL);
                 return new FloatType(typeName, legalType);
             }
-            case INTEGER -> {
-                legalType.add(TypeName.INTEGER);
-                legalType.add(TypeName.NULL);
-                return new IntegerType(typeName, legalType);
-            }
+
             case STRING -> {
                 legalType.add(TypeName.STRING);
                 legalType.add(TypeName.NULL);
