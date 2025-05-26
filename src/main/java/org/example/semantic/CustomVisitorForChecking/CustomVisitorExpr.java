@@ -97,8 +97,6 @@ public class CustomVisitorExpr extends MyLangParser1BaseVisitor<Void> implements
     @Override
     public Void visitString_term(MyLangParser1.String_termContext ctx) {
         if(ctx.STRING_LITERAL() != null){
-            table.declareConstant(ctx.STRING_LITERAL().getText(), TypeName.STRING);
-            table.getGlobal().declateConstToData(ctx.STRING_LITERAL().getText(), TypeName.STRING);
             Term.add(TypeName.STRING);
             return null;
         }

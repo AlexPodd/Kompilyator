@@ -67,7 +67,7 @@ public class SymbolTable {
                 info = new SymbolInfo(type, val);
                 break;
             case STRING:
-                ID = "_"+value;
+                ID = "_" + value.replaceAll(" ", "_");
                 info = new SymbolInfo(type, value);
             default:
                 break;

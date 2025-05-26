@@ -232,6 +232,19 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
         errorHandler.clearError();
     }
 
+    @Override
+    public Object visitPrint(MyLangParser1.PrintContext ctx) {
+        if(ctx.expression() != null){
+            if(ctx.expression().string_expression() != null){
+                if(ctx.expression().string_expression().string_term(0) != null){
+                    if(ctx.expression().string_expression().string_term(0).STRING_LITERAL() != null){
+                        symbolTable.getGlobal().declateConstToData(ctx.expression().string_expression().string_term(0).STRING_LITERAL().getText(), TypeName.STRING);
+                    }
+                }
+            }
+        }
+        return super.visitPrint(ctx);
+    }
 
     public List<String> getAllDeclarated() {
         return symbolTable.allDeclarated();

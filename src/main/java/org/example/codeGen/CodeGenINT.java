@@ -229,6 +229,13 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
             reg.setHasValue(true);
             return;
         }
+        if(info.getType() == TypeName.STRING){
+            command.add("    mov "+reg.getNameLoad(info.getSize())+", " + var);
+            info.addPlace(reg.getName());
+            reg.addVar(var);
+            reg.setHasValue(true);
+            return;
+        }
         if(info.isGlobal()){
             command.add("    mov "+reg.getNameLoad(info.getSize())+", " +"["+ var+"]");
             info.addPlace(reg.getName());

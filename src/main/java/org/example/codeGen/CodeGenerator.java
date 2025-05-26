@@ -359,7 +359,12 @@
                                 }
 
                                 case PRINT -> {
-                                    gen.generatePrint(r3, instruction.getResult());
+                                    if(instruction.getTypeResult().equals(TypeName.STRING)){
+                                        generatePrintForString(instruction.getResult());
+                                    }
+                                    else {
+                                        gen.generatePrint(r3, instruction.getResult());
+                                    }
                                 }
                                 case MODULO -> {
                                     gen.generateModulo(r3, r1, r2);
@@ -369,7 +374,6 @@
                         }
                     }
                 }
-
                 if (block.getOptimized().getInstructions().isEmpty()){
                     continue;
                 }
@@ -378,7 +382,69 @@
                 registerAllocator.clearReg(instructionsLast.getOp().equals(Operator.RETURN), instructionsLast, table, stackManager);
             }
         }
+        private void generatePrintForString(String result){
+            saveRegister();
 
+
+            SymbolInfo info = table.getGlobal().find(result);
+            if(info == null){
+               String var = "_"+ result.replace(" ", "_");
+               info = table.getGlobal().find(var);
+               var = var.replace("\"", "");
+
+                command.add(     "mov rax, 1");
+                command.add(     "mov rdi, 1");
+                command.add(     "mov rsi, "+var);
+                command.add(     "mov rdx, "+var.length());
+                command.add(     "syscall");
+
+                saveRegisterReturn();
+                return;
+            }
+
+            if(!table.isGlobal()){
+                int offset = stackManager.getLocalOffset(result);
+                command.add(     "mov rax, 1");
+                command.add(     "mov rdi, 1");
+                command.add(     "mov rsi, "+"[rbp" + offset + "]");
+                command.add(     "mov rdx, "+11);
+                command.add(     "syscall");
+
+                saveRegisterReturn();
+                return;
+            }
+            command.add(     "mov rax, 1");
+            command.add(     "mov rdi, 1");
+            command.add(     "mov rsi, "+result);
+            command.add(     "mov rdx, "+(info.getValue().toString().length()-1));
+            command.add(     "syscall");
+
+            saveRegisterReturn();
+
+        }
+        private void saveRegister(){
+
+            command.add("push rax");
+            command.add("push rcx");
+            command.add("push rdx");
+            command.add("push rsi");
+            command.add("push rdi");
+            command.add("push r8");
+            command.add("push r9");
+            command.add("push r10");
+            command.add("push r11");
+        }
+        private void saveRegisterReturn(){
+            command.add("pop r11");
+            command.add("pop r10");
+            command.add("pop r9");
+            command.add("pop r8");
+            command.add("pop rdi");
+            command.add("pop rsi");
+            command.add("pop rdx");
+            command.add("pop rcx");
+            command.add("pop rax");
+        }
         public Register choseRegg(String arg, boolean isResult, Instructions instruction, CodeGen generator, TypeName type){
             RegisterAllocator allocator = null;
             CodeGen generator1 = null;

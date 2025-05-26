@@ -137,7 +137,20 @@ public boolean isInsideConditional() {
         if(info != null){
             return info.getType();
         }
+        info = findString(arg);
+
+        if(info != null){
+            return info.getType();
+        }
+
         return tempType.get(arg);
+    }
+    private SymbolInfo findString(String var){
+        //var="_"+var.replace("\""," ").replace(" ", "_");
+        var = "_"+var.replace(" ", "_");
+        SymbolInfo info = myTable.getGlobal().find(var);
+
+        return info;
     }
     private TypeName calcType(TypeName type1, TypeName type2, String result){
         if(result == null){
