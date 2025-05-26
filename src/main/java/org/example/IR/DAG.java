@@ -76,7 +76,7 @@ public class DAG {
                 if (node.operator.equals(Operator.PARAM)){
                     continue;
                 }
-                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.isLoopNode || node.operator.equals(Operator.GOTO) || node.isLogical || node.isConditional){
+                if (node.operator.equals(Operator.CALL) || node.operator.equals(Operator.RETURN) || node.operator.equals(Operator.IFFALSE) || node.operator.equals(Operator.IFTRUE) || node.operator.equals(Operator.PRINT) || node.operator.equals(Operator.INPUT)|| node.isLoopNode || node.operator.equals(Operator.GOTO) || node.isLogical || node.isConditional){
                     continue;
                 }
 
@@ -363,7 +363,7 @@ public class DAG {
     }
 
     private Node findExistingNode(Operator op, Node left, Node right) {
-        if (op.equals(Operator.PARAM) || op.equals(Operator.PRINT) || op.equals(Operator.CALL)){
+        if (op.equals(Operator.PARAM) || op.equals(Operator.PRINT) || op.equals(Operator.CALL) || op.equals(Operator.INPUT)){
             return null;
         }
         if(op.equals(Operator.PLUS) || op.equals(Operator.MULTIPLY)){

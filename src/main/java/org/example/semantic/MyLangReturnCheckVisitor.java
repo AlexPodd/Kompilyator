@@ -1,6 +1,5 @@
 package org.example.semantic;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.example.MyLangParser1;
 import org.example.MyLangParser1BaseVisitor;
 import org.example.semantic.Types.TypeFactoryInterface;

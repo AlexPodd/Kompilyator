@@ -58,6 +58,18 @@ public class MyLangIRVisitor extends MyLangParser1BaseVisitor<String> {
     }
 
     @Override
+    public String visitInput(MyLangParser1.InputContext ctx) {
+
+        if(ctx.IDENTIFIER() != null){
+            instructions.add(new Instructions("input", null , null, ctx.IDENTIFIER().getText(), table));
+        }else {
+            instructions.add(new Instructions("input", null , null, null, table));
+        }
+
+        return null;
+    }
+
+    @Override
     public String visitTerm(MyLangParser1.TermContext ctx) {
         if (ctx.factor().isEmpty()) {
             throw new IllegalStateException("Empty term");

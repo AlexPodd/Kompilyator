@@ -101,6 +101,18 @@ public class MyLangParser1BaseListener implements MyLangParser1Listener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterInput(MyLangParser1.InputContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInput(MyLangParser1.InputContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterDeclaration(MyLangParser1.DeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -78,6 +78,16 @@ public interface MyLangParser1Listener extends ParseTreeListener {
 	 */
 	void exitPrint(MyLangParser1.PrintContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MyLangParser1#input}.
+	 * @param ctx the parse tree
+	 */
+	void enterInput(MyLangParser1.InputContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MyLangParser1#input}.
+	 * @param ctx the parse tree
+	 */
+	void exitInput(MyLangParser1.InputContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MyLangParser1#declaration}.
 	 * @param ctx the parse tree
 	 */

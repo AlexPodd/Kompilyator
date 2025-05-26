@@ -95,7 +95,7 @@ DIVIDE_ASSIGN: '/=';
 MODULO_ASSIGN: '%=';
 
 PRINT: 'вывод';
-
+INPUT: 'ввод';
 COMMENT: '/*' .*? '*/' -> skip;
 
 

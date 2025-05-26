@@ -82,6 +82,7 @@
         private void generateBss(){
             command.add("section .bss");
             command.add("num_buf resb 32");
+            command.add("input_buf resb 100");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
                 if (info.getValue() == null){
@@ -211,6 +212,100 @@
             command.add("    pop rcx");
             command.add("    pop rbx");
             command.add("    ret");
+
+
+            // -------------------------
+            // atoi_nasm: input_buf -> RAX
+            // -------------------------
+            command.add("atoi_nasm:");
+            command.add("    xor rax, rax");
+            command.add("    xor rcx, rcx");
+            command.add("    xor rbx, rbx");
+            command.add("atoi_loop:");
+            command.add("    mov bl, byte [rsi + rcx]");
+            command.add("    cmp bl, 10");
+            command.add("    je atoi_done");
+            command.add("    cmp bl, 0");
+            command.add("    je atoi_done");
+            command.add("    sub bl, '0'");
+            command.add("    imul rax, 10");
+            command.add("    add rax, rbx");
+            command.add("    inc rcx");
+            command.add("    jmp atoi_loop");
+            command.add("atoi_done:");
+            command.add("    ret");
+
+            // -------------------------
+            // atof_nasm: input_buf -> XMM0
+            // -------------------------
+            command.add("atof_nasm:");
+            command.add("    xor rax, rax");
+            command.add("    xor rcx, rcx");
+            command.add("    xor rbx, rbx");
+            command.add("    pxor xmm0, xmm0");
+            command.add("    pxor xmm1, xmm1");
+            command.add("    pxor xmm2, xmm2");
+            command.add("    pxor xmm3, xmm3");
+            command.add("atof_int:");
+            command.add("    mov bl, [rsi + rcx]");
+            command.add("    cmp bl, '.'");
+            command.add("    je atof_frac_start");
+            command.add("    cmp bl, 10");
+            command.add("    je atof_done");
+            command.add("    cmp bl, 0");
+            command.add("    je atof_done");
+            command.add("    sub bl, '0'");
+            command.add("    imul rax, 10");
+            command.add("    add rax, rbx");
+            command.add("    inc rcx");
+            command.add("    jmp atof_int");
+            command.add("atof_frac_start:");
+            command.add("    cvtsi2sd xmm0, rax");
+            command.add("    xor rax, rax");
+            command.add("    inc rcx");
+            command.add("    mov r8, 1");
+            command.add("atof_frac:");
+            command.add("    mov bl, [rsi + rcx]");
+            command.add("    cmp bl, 10");
+            command.add("    je atof_frac_done");
+            command.add("    cmp bl, 0");
+            command.add("    je atof_frac_done");
+            command.add("    sub bl, '0'");
+            command.add("    imul rax, 10");
+            command.add("    inc rcx");
+            command.add("    inc r8");
+            command.add("    jmp atof_frac");
+            command.add("atof_frac_done:");
+            command.add("    mov rcx, r8");
+            command.add("    dec rcx");
+            command.add("    mov rdx, 1");
+            command.add("atof_pow10:");
+            command.add("    imul rdx, 10");
+            command.add("    loop atof_pow10");
+            command.add("    cvtsi2sd xmm1, rax");
+            command.add("    cvtsi2sd xmm2, rdx");
+            command.add("    divsd xmm1, xmm2");
+            command.add("    addsd xmm0, xmm1");
+            command.add("atof_done:");
+            command.add("    ret");
+
+            // -------------------------
+            // strcpy_nasm: копирует из RSI в RDI до \n
+            // -------------------------
+            command.add("strcpy_nasm:");
+            command.add("    xor rcx, rcx");
+            command.add("strcpy_loop:");
+            command.add("    mov al, [rsi + rcx]");
+            command.add("    cmp al, 10");
+            command.add("    je strcpy_done");
+            command.add("    cmp al, 0");
+            command.add("    je strcpy_done");
+            command.add("    mov [rdi + rcx], al");
+            command.add("    inc rcx");
+            command.add("    jmp strcpy_loop");
+            command.add("strcpy_done:");
+            command.add("    mov byte [rdi + rcx], 0");
+            command.add("    ret");
         }
 
         private void generateEnd(){
@@ -283,6 +378,9 @@
                         }
                         case PARAM -> {
                             generateParam(instruction);
+                        }
+                        case INPUT -> {
+                            generateInput(instruction.getResult());
                         }
                         case IFFALSE -> {
                             RegisterAllocator allocator;
@@ -387,8 +485,6 @@
         }
         private void generatePrintForString(String result){
             saveRegister();
-
-
             SymbolInfo info = table.getGlobal().find(result);
             if(info == null){
                String var = "_"+ result.replace(" ", "_");
@@ -432,6 +528,34 @@
 
             saveRegisterReturn();
 
+        }
+        private void generateInput(String result){
+            saveRegister();
+            SymbolInfo info = table.find(result);
+
+            command.add(     "mov rax, 0");
+            command.add(     "mov rdi, 0");
+            command.add(     "mov rsi, input_buf");
+            command.add(     "mov rdx, 100");
+            command.add(     "syscall");
+
+            if(info != null){
+                switch (info.getType()){
+                    case FLOAT -> {
+                        command.add("lea rsi, [input_buf]");
+                        command.add("call atof_nasm");
+
+                        codeGenFLOAT.generateStore(result, xmm0);
+                      //  command.add("movsd [" + info.getAsmName() + "], xmm0");
+                    }
+                    case INTEGER -> {
+                        command.add("lea rsi, [input_buf]");
+                        command.add("call atoi_nasm");
+                        codeGenINT.generateStore(result, rax);
+                    }
+                }
+            }
+            saveRegisterReturn();
         }
         private void saveRegister(){
 

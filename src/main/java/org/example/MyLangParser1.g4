@@ -32,6 +32,9 @@ print:
     PRINT LEFT_PAREN ?expression RIGHT_PAREN
             ;
 
+input:
+    INPUT PRINT LEFT_PAREN ?IDENTIFIER RIGHT_PAREN;
+
 declaration:
     type IDENTIFIER (ASSIGN expression)?;
 
@@ -53,18 +56,16 @@ compound_operator:
     | DIVIDE_ASSIGN
     | MODULO_ASSIGN;
 
-// Возврат
 return_statement: RETURN expression?;
 
-// Условные конструкции
+
 conditional_statement:
     IF expression THEN COLON block (ELSE_IF expression THEN COLON block)* (ELSE COLON block)?;
 
 
-// Циклы
 for: FOR LEFT_PAREN declaration SEMICOLON expression SEMICOLON assignment RIGHT_PAREN COLON block;
 
-// Функции
+
 function_declaration:
     PROCEDURE return_type IDENTIFIER LEFT_PAREN parameters? RIGHT_PAREN COLON block PROCEDURE_END;
 

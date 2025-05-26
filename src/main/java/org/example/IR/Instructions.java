@@ -270,6 +270,8 @@ public boolean isInsideConditional() {
                 return Operator.RETURN;
             case "%":
                 return Operator.MODULO;
+            case "input":
+                return Operator.INPUT;
             default:
                 try {
                     throw new Exception("NE WORK");

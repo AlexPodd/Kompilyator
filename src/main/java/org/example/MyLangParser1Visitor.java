@@ -53,6 +53,12 @@ public interface MyLangParser1Visitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPrint(MyLangParser1.PrintContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MyLangParser1#input}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInput(MyLangParser1.InputContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MyLangParser1#declaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

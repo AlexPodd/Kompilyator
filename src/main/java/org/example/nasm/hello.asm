@@ -26,6 +26,7 @@ _400.0 dq 400.0
 _HELLO_WORDL db "HELLO WORDL", 10
 section .bss
 num_buf resb 32
+
 global _start
 section .text
 print_int:
