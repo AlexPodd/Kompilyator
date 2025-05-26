@@ -18,7 +18,7 @@ public class CodeGenINT extends AbstractCodeGen{
     @Override
     public void generateDiv(Register result, Register reg1, Register reg2) {
         boolean saveRAX = !reg1.getName().equals("RAX") && !reg2.getName().equals("RAX") && !result.getName().equals("RAX");
-        boolean saveRDX = !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX");
+        boolean saveRDX = !reg1.getName().equals("RDX") && !reg2.getName().equals("RDX") && !result.getName().equals("RDX");
 
         if (saveRAX) command.add("    push RAX");
         if (saveRDX) command.add("    push RDX");

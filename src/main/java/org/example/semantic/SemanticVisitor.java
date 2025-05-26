@@ -80,6 +80,7 @@ public class SemanticVisitor extends MyLangParser1BaseVisitor {
             return null;
         }
 
+        System.out.println(ctx.getText());
         if(type.CheckTypeValue(ctx.expression(), symbolTable)){
 
             return null;

@@ -105,7 +105,7 @@
         }
         private void generateData(){
             command.add("section .data");
-            command.add("fmtGlobal db \"Результат: %f\", 10, 0");
+            command.add("fmtGlobal db \"Result: %f\", 10, 0");
             command.add("extern printf, strlen");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
@@ -495,7 +495,7 @@
                 command.add(     "mov rax, 1");
                 command.add(     "mov rdi, 1");
                 command.add(     "mov rsi, "+var);
-                command.add(     "mov rdx, "+var.length());
+                command.add(     "mov rdx, "+(info.getValue().toString().length()-1));
                 command.add(     "syscall");
 
                 saveRegisterReturn();
