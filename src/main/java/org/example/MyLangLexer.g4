@@ -97,7 +97,7 @@ MODULO_ASSIGN: '%=';
 PRINT: 'вывод';
 INPUT: 'ввод';
 COMMENT: '/*' .*? '*/' -> skip;
-
+LINE_COMMENT: '#' ~[\r\n]* -> skip;
 
 //IDENTIFIER: [a-zA-Z_\u0400-\u04FF][a-zA-Z0-9_\u0400-\u04FF]*;
 //IDENTIFIER: [a-zA-Z_ \u0400-\u04FF][a-zA-Z0-9_ \u0400-\u04FF]*;
