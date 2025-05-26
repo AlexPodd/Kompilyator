@@ -80,6 +80,10 @@ public class RusLSPServer implements LanguageServer, LanguageClientAware {
         capabilities.setSemanticTokensProvider(new SemanticTokensWithRegistrationOptions(legend, true));
         capabilities.setCompletionProvider(new CompletionOptions());
 
+        // Добавляем поддержку code actions и команд
+        capabilities.setCodeActionProvider(true);
+        capabilities.setExecuteCommandProvider(new ExecuteCommandOptions(List.of("generateCode")));
+
         return CompletableFuture.supplyAsync(() -> new InitializeResult(capabilities));
     }
 
@@ -133,4 +137,5 @@ public class RusLSPServer implements LanguageServer, LanguageClientAware {
             textDocumentService.setClient(client);
             client.showMessage(new MessageParams(MessageType.Info, "LSP Server connected!"));
     }
+
 }

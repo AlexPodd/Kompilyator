@@ -4,20 +4,31 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
+
 import org.eclipse.lsp4j.jsonrpc.services.JsonSegment;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.example.IR.MyLangIRVisitor;
+import org.example.IR.Optimizator;
 import org.example.MyLangLexer;
+import org.example.MyLangParser1;
+import org.example.codeGen.CodeGenerator;
 import org.example.error.MyError;
+import org.example.semantic.SemanticVisitor;
+import org.example.semantic.SymbolTable;
+import org.example.semantic.Types.TypeFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @JsonSegment("textDocument")
-public class RusTextDocumentService implements TextDocumentService{
+public class RusTextDocumentService implements IRusTextDocumentService{
 
     // variable - 1 function - 2 keyword - 0 comment - 6 string - 3 number - 4 operator - 5
 
@@ -36,6 +47,26 @@ public class RusTextDocumentService implements TextDocumentService{
         lspTokens = new ArrayList<>();
         this.server = server;
 
+    }
+
+    @Override
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Either<Command, CodeAction>> actions = new ArrayList<>();
+
+            // Добавляем action для генерации кода
+            CodeAction generateAction = new CodeAction();
+            generateAction.setTitle("Generate optimized code");
+            generateAction.setKind(CodeActionKind.Source);
+            generateAction.setCommand(new Command(
+                    "Generate code",
+                    "generateCode",
+                    List.of(params.getTextDocument())
+            ));
+
+            actions.add(Either.forRight(generateAction));
+            return actions;
+        });
     }
 
 
@@ -60,6 +91,21 @@ public class RusTextDocumentService implements TextDocumentService{
 
     }
 
+    @JsonRequest("textDocument/diagnostics")
+    public List<Diagnostic> handleDiagnosticsRequest(TextDocumentIdentifier params) {
+        URI uri = URI.create(params.getUri());
+        String text = server.getContextHashMap().get(uri);
+        if (text == null) {
+            return Collections.emptyList();
+        }
+
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        generateDiagnostic(diagnostics, server.getLexer().getErrors(), "MyLangLexer");
+        generateDiagnostic(diagnostics, server.getParser().getErrors(), "MyLangParser");
+        generateDiagnostic(diagnostics, server.getVisitor().getErrors(), "Semantic");
+
+        return diagnostics;
+    }
         @Override
         public void didOpen(DidOpenTextDocumentParams params) {
             URI uri = URI.create(params.getTextDocument().getUri());
@@ -109,6 +155,7 @@ public class RusTextDocumentService implements TextDocumentService{
                         source
                 );
                 diagnostics.add(diagnostic);
+                System.out.println(diagnostic.getMessage());
             }
         }
 
@@ -151,6 +198,38 @@ public class RusTextDocumentService implements TextDocumentService{
         return CompletableFuture.completedFuture(Either.forLeft(completions));
     }
 
+    private String generateOptimizedCode(String sourceCode) {
+        CharStream input = CharStreams.fromString(sourceCode);
+        MyLangLexer lexer = new MyLangLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        MyLangParser1 parser = new MyLangParser1(tokens);
+        TypeFactory factory = new TypeFactory();
+        SymbolTable globalSymbolTable = new SymbolTable(null, "global", 0, true);
+        SemanticVisitor visitor = new SemanticVisitor(factory, globalSymbolTable);
+
+        // Парсим код
+        ParseTree tree = parser.program();
+        visitor.visit(tree);
+
+        // Генерация промежуточного кода
+        MyLangIRVisitor irVisitor = new MyLangIRVisitor(globalSymbolTable);
+        irVisitor.visit(tree);
+        irVisitor.setLabel();
+        irVisitor.instructionsToText();
+
+        // Оптимизация и генерация конечного кода
+        Optimizator optimizator = new Optimizator();
+        optimizator.blockConstruct(irVisitor.getInstructions());
+        CodeGenerator codeGenerator = new CodeGenerator(optimizator.getBlocks(), globalSymbolTable);
+
+        // Собираем результат в строку
+        StringBuilder result = new StringBuilder();
+        for (String command : codeGenerator.getCommandList()) {
+            result.append(command).append("\n");
+        }
+
+        return result.toString();
+    }
 
     private int getLspTokenType(int MyLexerTokenType) {
         switch (MyLexerTokenType) {
@@ -183,6 +262,8 @@ public class RusTextDocumentService implements TextDocumentService{
                 return -1;
         }
     }
+
+
     private List<Integer> convertTokensToLSP(List<Token> tokens) {
         List<Integer> result = new ArrayList<>();
         int prevLine = 0, prevChar = 0;
@@ -212,8 +293,37 @@ public class RusTextDocumentService implements TextDocumentService{
         return result;
     }
 
+    @Override
+    public CompletableFuture<String> generateCode(TextDocumentIdentifier document) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                if (document == null || document.getUri() == null) {
+                    throw new RuntimeException("TextDocumentIdentifier или его URI не может быть null");
+                }
+                URI uri = URI.create(document.getUri());
 
+                String sourceCode = server.getContextHashMap().get(uri);
+                if (sourceCode == null) {
+                    throw new RuntimeException("Document not found: " + document.getUri());
+                }
 
+                fillToken(sourceCode);
+
+                boolean hasErrors = !server.getLexer().getErrors().isEmpty() ||
+                        !server.getParser().getErrors().isEmpty() ||
+                        !server.getVisitor().getErrors().isEmpty();
+
+                if (hasErrors) {
+                    throw new RuntimeException("Cannot generate code: document contains errors");
+                }
+
+                return generateOptimizedCode(sourceCode);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Ошибка при генерации кода: " + e.getMessage());
+            }
+        });
+    }
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
         return CompletableFuture.completedFuture(new SemanticTokens(lspTokens));
