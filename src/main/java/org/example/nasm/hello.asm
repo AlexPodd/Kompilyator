@@ -26,7 +26,8 @@ _400.0 dq 400.0
 _HELLO_WORDL db "HELLO WORDL", 10
 section .bss
 num_buf resb 32
-
+input_buf resb 100
+пример1 resd 1
 global _start
 section .text
 print_int:
@@ -92,6 +93,87 @@ int_to_str:
     pop rdx
     pop rcx
     pop rbx
+    ret
+atoi_nasm:
+    xor rax, rax
+    xor rcx, rcx
+    xor rbx, rbx
+atoi_loop:
+    mov bl, byte [rsi + rcx]
+    cmp bl, 10
+    je atoi_done
+    cmp bl, 0
+    je atoi_done
+    sub bl, '0'
+    imul rax, 10
+    add rax, rbx
+    inc rcx
+    jmp atoi_loop
+atoi_done:
+    ret
+atof_nasm:
+    xor rax, rax
+    xor rcx, rcx
+    xor rbx, rbx
+    pxor xmm0, xmm0
+    pxor xmm1, xmm1
+    pxor xmm2, xmm2
+    pxor xmm3, xmm3
+atof_int:
+    mov bl, [rsi + rcx]
+    cmp bl, '.'
+    je atof_frac_start
+    cmp bl, 10
+    je atof_done
+    cmp bl, 0
+    je atof_done
+    sub bl, '0'
+    imul rax, 10
+    add rax, rbx
+    inc rcx
+    jmp atof_int
+atof_frac_start:
+    cvtsi2sd xmm0, rax
+    xor rax, rax
+    inc rcx
+    mov r8, 1
+atof_frac:
+    mov bl, [rsi + rcx]
+    cmp bl, 10
+    je atof_frac_done
+    cmp bl, 0
+    je atof_frac_done
+    sub bl, '0'
+    imul rax, 10
+    inc rcx
+    inc r8
+    jmp atof_frac
+atof_frac_done:
+    mov rcx, r8
+    dec rcx
+    mov rdx, 1
+atof_pow10:
+    imul rdx, 10
+    loop atof_pow10
+    cvtsi2sd xmm1, rax
+    cvtsi2sd xmm2, rdx
+    divsd xmm1, xmm2
+    addsd xmm0, xmm1
+atof_done:
+    ret
+strcpy_nasm:
+    xor rcx, rcx
+strcpy_loop:
+    mov al, [rsi + rcx]
+    cmp al, 10
+    je strcpy_done
+    cmp al, 0
+    je strcpy_done
+    mov [rdi + rcx], al
+    inc rcx
+    jmp strcpy_loop
+strcpy_done:
+    mov byte [rdi + rcx], 0
     ret
 сложноеВычисление:
     push rbp
@@ -532,6 +614,32 @@ _start:
     push rbp
     mov rbp, rsp
     sub rsp,0
+push rax
+push rcx
+push rdx
+push rsi
+push rdi
+push r8
+push r9
+push r10
+push r11
+mov rax, 0
+mov rdi, 0
+mov rsi, input_buf
+mov rdx, 100
+syscall
+lea rsi, [input_buf]
+call atoi_nasm
+    mov [пример1], EAX
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rax
 push rax
 push rcx
 push rdx

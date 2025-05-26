@@ -26,6 +26,7 @@ simple_stmt:
     | BREAK
     | CONTINUE
     | print
+    | input
     | function_call SEMICOLON?;
 
 print:
@@ -33,7 +34,7 @@ print:
             ;
 
 input:
-    INPUT PRINT LEFT_PAREN ?IDENTIFIER RIGHT_PAREN;
+    INPUT LEFT_PAREN ?IDENTIFIER RIGHT_PAREN;
 
 declaration:
     type IDENTIFIER (ASSIGN expression)?;
