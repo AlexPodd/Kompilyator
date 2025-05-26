@@ -50,7 +50,6 @@ public class StackManager {
               //  generator.addCommand("LOCAL "+ key+" "+value.getOffset());
                 switch (value.getType()){
                     case STRING -> {
-                        System.out.println(key +" "+value.getSize());
                         Register register  =generator.findInRegParamINT(key);
                         if(register != null){
                             generator.addCommand("    mov "+sizeOfReg(value.getSize())+"[rbp" + offsetToText(value.getOffset()) + "], " + register.getNameLoad(8));

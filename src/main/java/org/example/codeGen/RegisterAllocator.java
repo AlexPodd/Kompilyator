@@ -153,7 +153,10 @@ public class RegisterAllocator {
                     }
                     continue;
                 }
+                if (info.getType().equals(TypeName.STRING)){
 
+                    continue;
+                }
 
                 if (info.isOnlyInReg(register.getName())){
                     info.removeFrom(register.getName());

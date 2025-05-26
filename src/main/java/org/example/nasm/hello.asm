@@ -1,6 +1,6 @@
 section .data
 fmtGlobal db "Результат: %f", 10, 0
-extern printf
+extern printf, strlen
 _200.0 dq 200.0
 _20.0 dq 20.0
 _10.0 dq 10.0
@@ -358,10 +358,12 @@ push r8
 push r9
 push r10
 push r11
+mov rdi, [rbp-8]
+call strlen
+mov rdx, rax
 mov rax, 1
 mov rdi, 1
 mov rsi, [rbp-8]
-mov rdx, 11
 syscall
 pop r11
 pop r10
@@ -372,7 +374,6 @@ pop rsi
 pop rdx
 pop rcx
 pop rax
-    mov qword[rbp-8], RAX
     mov EAX, dword [rbp-12]
     mov ECX, dword [rbp-16]
     cmp RAX, RCX
@@ -576,7 +577,6 @@ pop rsi
 pop rdx
 pop rcx
 pop rax
-    mov [гол], RCX
     mov EDI, [а]
     mov ESI, [б]
 sub rsp, 8

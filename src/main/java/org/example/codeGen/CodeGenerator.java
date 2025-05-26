@@ -105,7 +105,7 @@
         private void generateData(){
             command.add("section .data");
             command.add("fmtGlobal db \"Результат: %f\", 10, 0");
-            command.add("extern printf");
+            command.add("extern printf, strlen");
             for(String var: globalTable.allDeclarated()){
                 SymbolInfo info = globalTable.find(var);
                 if (info.getValue() == null){
@@ -328,6 +328,18 @@
                             }
                             gen.generateIfTrue(r1, r2, instruction);
                         }
+                        case PRINT -> {
+                            if(instruction.getTypeResult().equals(TypeName.STRING)){
+                                generatePrintForString(instruction.getResult());
+                            }
+                            else {
+                                r3=choseRegg(instruction.getResult(),true, instruction, gen, instruction.getTypeResult());
+                                if(r3 != null){
+                                    r3.setUsed(false);
+                                }
+                                gen.generatePrint(r3, instruction.getResult());
+                            }
+                        }
                         default -> {
                             r1=choseRegg(instruction.getArg1(),false, instruction, gen, instruction.getTypeArg1());
                             r2=choseRegg(instruction.getArg2(),false, instruction, gen, instruction.getTypeArg2());
@@ -356,15 +368,6 @@
                                 }
                                 case RETURN -> {
                                     gen.generateReturn(r3, instruction.getResult());
-                                }
-
-                                case PRINT -> {
-                                    if(instruction.getTypeResult().equals(TypeName.STRING)){
-                                        generatePrintForString(instruction.getResult());
-                                    }
-                                    else {
-                                        gen.generatePrint(r3, instruction.getResult());
-                                    }
                                 }
                                 case MODULO -> {
                                     gen.generateModulo(r3, r1, r2);
@@ -404,10 +407,18 @@
 
             if(!table.isGlobal()){
                 int offset = stackManager.getLocalOffset(result);
+
+
+                command.add(     "mov rdi, "+"[rbp" + offset + "]");
+                command.add(     "call strlen");
+                command.add(     "mov rdx, rax");
+
+
                 command.add(     "mov rax, 1");
                 command.add(     "mov rdi, 1");
                 command.add(     "mov rsi, "+"[rbp" + offset + "]");
-                command.add(     "mov rdx, "+11);
+
+               // command.add(     "mov rdx, "+11);
                 command.add(     "syscall");
 
                 saveRegisterReturn();
