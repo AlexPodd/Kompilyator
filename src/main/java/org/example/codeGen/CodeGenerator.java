@@ -487,8 +487,9 @@
             saveRegister();
             SymbolInfo info = table.getGlobal().find(result);
             if(info == null){
-               String var = "_"+ result.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
-               info = table.getGlobal().find(var);
+               //String var = "_"+ result.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+               String var = sanitizeName(result);
+                info = table.getGlobal().find(var);
                var = var.replace("\"", "");
 
                 command.add(     "mov rax, 1");
@@ -528,6 +529,25 @@
 
             saveRegisterReturn();
 
+        }
+        private String sanitizeName(String var) {
+            var = var
+                    .replace("+", "plus")
+                    .replace("-", "minus")
+                    .replace("*", "mul")
+                    .replace("/", "div")
+                    .replace("%", "mod")
+                    .replace(">", "gt")
+                    .replace("<", "lt")
+                    .replace("=", "eq")
+                    .replace("!", "not")
+            // можно добавить другие символы по аналогии
+            ;
+
+            // После замены известных символов — всё остальное заменить на "_"
+            var = var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+
+            return "_" + var;
         }
         private void generateInput(String result){
             saveRegister();

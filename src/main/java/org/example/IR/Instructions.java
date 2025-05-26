@@ -148,10 +148,31 @@ public boolean isInsideConditional() {
     private SymbolInfo findString(String var){
         //var="_"+var.replace("\""," ").replace(" ", "_");
         //var = "_"+var.replace(" ", "_");
-        var = "_" + var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+        //var = "_" + var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+        var = sanitizeName(var);
         SymbolInfo info = myTable.getGlobal().find(var);
 
         return info;
+    }
+
+    private String sanitizeName(String var) {
+        var = var
+                .replace("+", "plus")
+                .replace("-", "minus")
+                .replace("*", "mul")
+                .replace("/", "div")
+                .replace("%", "mod")
+                .replace(">", "gt")
+                .replace("<", "lt")
+                .replace("=", "eq")
+                .replace("!", "not")
+        // можно добавить другие символы по аналогии
+        ;
+
+        // После замены известных символов — всё остальное заменить на "_"
+        var = var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+
+        return "_" + var;
     }
     private TypeName calcType(TypeName type1, TypeName type2, String result){
         if(result == null){

@@ -67,7 +67,7 @@ public class SymbolTable {
                 info = new SymbolInfo(type, val);
                 break;
             case STRING:
-                ID = "_" + value.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+                ID = sanitizeName(value);
             //    ID = "_" + value.replaceAll(" ", "_");
                 info = new SymbolInfo(type, value);
             default:
@@ -77,6 +77,25 @@ public class SymbolTable {
         table.put(ID, info);
     }
 
+    private String sanitizeName(String var) {
+        var = var
+                .replace("+", "plus")
+                .replace("-", "minus")
+                .replace("*", "mul")
+                .replace("/", "div")
+                .replace("%", "mod")
+                .replace(">", "gt")
+                .replace("<", "lt")
+                .replace("=", "eq")
+                .replace("!", "not")
+        // можно добавить другие символы по аналогии
+        ;
+
+        // После замены известных символов — всё остальное заменить на "_"
+        var = var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
+
+        return "_" + var;
+    }
 
     private String valueToText(Object val) {
         double num = Double.parseDouble((String) val);
