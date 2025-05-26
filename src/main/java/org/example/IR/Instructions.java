@@ -147,7 +147,8 @@ public boolean isInsideConditional() {
     }
     private SymbolInfo findString(String var){
         //var="_"+var.replace("\""," ").replace(" ", "_");
-        var = "_"+var.replace(" ", "_");
+        //var = "_"+var.replace(" ", "_");
+        var = "_" + var.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
         SymbolInfo info = myTable.getGlobal().find(var);
 
         return info;

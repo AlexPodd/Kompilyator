@@ -7,24 +7,24 @@ _10.0 dq 10.0
 _12.0 dq 12.0
 _7.0 dq 7.0
 _0.0 dq 0.0
-_SUMM_RESULT_ db "SUMM RESULT ", 10
 _3.0 dq 3.0
 _2.0 dq 2.0
 _1.0 dq 1.0
 гол db "qwety asdf", 10
-_qwety_asdf db "qwety asdf", 10
+__HELLO_WORDL_ db "HELLO WORDL", 10
+__SUMM_RESULT__ db "SUMM RESULT ", 10
 результат dd 0
 _150.0 dq 150.0
 _minus1.0 dq -1.0
-_Check_inside_func db "Check inside func", 10
 а dd 200
+__Check_inside_func_ db "Check inside func", 10
 б dd 400
 в dd 150
 г dd 200
 д dd 20
+__qwety_asdf_ db "qwety asdf", 10
 _25.0 dq 25.0
 _400.0 dq 400.0
-_HELLO_WORDL db "HELLO WORDL", 10
 section .bss
 num_buf resb 32
 input_buf resb 100
@@ -198,8 +198,8 @@ push r10
 push r11
 mov rax, 1
 mov rdi, 1
-mov rsi, _Check_inside_func
-mov rdx, 18
+mov rsi, __Check_inside_func_
+mov rdx, 20
 syscall
 pop r11
 pop r10
@@ -684,8 +684,8 @@ push r10
 push r11
 mov rax, 1
 mov rdi, 1
-mov rsi, _SUMM_RESULT_
-mov rdx, 13
+mov rsi, __SUMM_RESULT__
+mov rdx, 15
 syscall
 pop r11
 pop r10
@@ -711,8 +711,8 @@ push r10
 push r11
 mov rax, 1
 mov rdi, 1
-mov rsi, _HELLO_WORDL
-mov rdx, 12
+mov rsi, __HELLO_WORDL_
+mov rdx, 14
 syscall
 pop r11
 pop r10

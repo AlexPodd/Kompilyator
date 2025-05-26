@@ -487,7 +487,7 @@
             saveRegister();
             SymbolInfo info = table.getGlobal().find(result);
             if(info == null){
-               String var = "_"+ result.replace(" ", "_");
+               String var = "_"+ result.replaceAll("[^a-zA-Zа-яА-Я0-9_]", "_");
                info = table.getGlobal().find(var);
                var = var.replace("\"", "");
 
