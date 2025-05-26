@@ -3,32 +3,33 @@ fmtGlobal db "Результат: %f", 10, 0
 extern printf, strlen
 _200.0 dq 200.0
 _20.0 dq 20.0
-_Sum_result_ db "Sum result ", 10
 _10.0 dq 10.0
-_8.4 dq 8.4
-_8.0 dq 8.0
+_12.0 dq 12.0
+_7.0 dq 7.0
 _0.0 dq 0.0
+_SUMM_RESULT_ db "SUMM RESULT ", 10
 _3.0 dq 3.0
 _2.0 dq 2.0
 _1.0 dq 1.0
-гол db "qwety", 10
-результат dq 0.0
+гол db "qwety asdf", 10
+_qwety_asdf db "qwety asdf", 10
+результат dd 0
 _150.0 dq 150.0
 _minus1.0 dq -1.0
-а dq 200.0
-б dq 400.0
-в dq 150.0
-_qwety db "qwety", 10
-г dq 200.0
-_22.0 dq 22.0
-д dq 20.0
-_26.0 dq 26.0
+_Check_inside_func db "Check inside func", 10
+а dd 200
+б dd 400
+в dd 150
+г dd 200
+д dd 20
+_25.0 dq 25.0
 _400.0 dq 400.0
+_HELLO_WORDL db "HELLO WORDL", 10
 section .bss
 num_buf resb 32
 input_buf resb 100
-пример2 resq 1
-пример1 resq 1
+пример2 resd 1
+пример1 resd 1
 global _start
 section .text
 print_int:
@@ -176,350 +177,439 @@ strcpy_loop:
 strcpy_done:
     mov byte [rdi + rcx], 0
     ret
-арифметикаИБулевы:
+сложноеВычисление:
     push rbp
     mov rbp, rsp
     sub rsp,24
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    movsd xmm2, [_0.0]
-    movsd [rbp-24], xmm2
-    ucomisd xmm0, xmm1
-    ja L4
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], EDX
+    mov dword[rbp-16], ECX
+    mov dword[rbp-20], R8D
+    mov dword[rbp-24], 0
+push rax
+push rcx
+push rdx
+push rsi
+push rdi
+push r8
+push r9
+push r10
+push r11
+mov rax, 1
+mov rdi, 1
+mov rsi, _Check_inside_func
+mov rdx, 18
+syscall
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rax
+    mov dword[rbp-16], ECX
+    mov dword[rbp-12], EDX
+    mov RAX, 0
+    cmp RSI, RAX
+    jne L2
     sub rsp, 8
     mov qword[rbp-32], 0
-    mov RAX, 0
     mov [rbp-32], RAX
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    mov [rbp-32], RAX
-    jmp L5
-L4:
-    mov RAX, 1
-    mov [rbp-32], RAX
-    mov [rbp-32], RAX
-L5:
-    mov RAX, [rbp-32]
-    cmp RAX, 0
-    je L2
-    mov [rbp-32], RAX
-    movsd xmm0, [rbp-8]
-    movsd xmm1, [rbp-16]
-    ucomisd xmm0, xmm1
-    je L6
-    sub rsp, 8
-    mov qword[rbp-40], 0
-    mov RAX, 0
-    mov [rbp-40], RAX
-    mov [rbp-40], RAX
-    jmp L7
-L6:
-    mov RAX, 1
-    mov [rbp-40], RAX
-    mov [rbp-40], RAX
-L7:
-    mov RAX, [rbp-40]
-    cmp RAX, 0
-    jne L8
-    sub rsp, 8
-    mov qword[rbp-48], 0
-    mov RCX, 1
-    mov [rbp-48], RCX
-    jmp L9
-L8:
-    mov RAX, 0
-    mov [rbp-48], RAX
-L9:
-    mov RAX, [rbp-48]
-    cmp RAX, 0
-    je L2
-    sub rsp, 8
-    mov qword[rbp-56], 0
-    mov RCX, 1
-    mov [rbp-56], RCX
     jmp L3
 L2:
-    mov RAX, 0
-    mov [rbp-56], RAX
+    mov RAX, 1
+    mov [rbp-32], RAX
+    mov [rbp-32], RAX
 L3:
-    mov RAX, [rbp-56]
+    mov RAX, [rbp-32]
     cmp RAX, 0
     je L1
-    sub rsp, 32 ; резерв под локальные
-    movsd xmm0, [rbp-8]
-    movsd xmm1, [rbp-16]
-    movsd xmm2, xmm0
-    addsd xmm2, xmm1
-    movsd xmm3, xmm0
-    subsd xmm3, xmm1
-    movsd xmm4, xmm2
-    mulsd xmm4, xmm3
-    movsd xmm5, xmm4
-    divsd xmm5, xmm1
-    movsd [rbp-24], xmm5
+    sub rsp, 8 ; резерв под локальные
+    mov RCX, RDI
+    add RCX, RSI
+    mov EBX, dword [rbp-12]
+    mov EDX, dword [rbp-16]
+    mov RAX, RBX
+    sub RAX, RDX
+    push RDX
+    push RCX
+    push RAX
+    pop RCX
+    pop RAX
+    imul RAX, RCX
+    mov RBX, RAX
+    pop RDX
+    push RDX
+    mov RAX, RBX
+    cqo
+    idiv R8
+    pop RDX
+    leave
+    ret
     jmp L0
 L1:
-    movsd xmm0, [_minus1.0]
-    movsd [rbp-24], xmm0
+    mov RAX, -1
+    mov dword[rbp-24], EAX
+    leave
+    ret
 L0:
-    movsd xmm0, [rbp-24]
+    mov EAX, dword [rbp-24]
     leave
     ret
 цикл_сумма:
     push rbp
     mov rbp, rsp
-    sub rsp,8
-    movsd xmm0, [_0.0]
-    movsd [rbp-8], xmm0
-    mov dword[rbp-12], 1
+    sub rsp,4
+    mov dword[rbp-4], 0
+    mov dword[rbp-8], 1
     mov RAX, 1
-    mov dword[rbp-12], EAX
-L10:
+    mov dword[rbp-8], EAX
+L4:
+    mov EAX, dword [rbp-8]
+    mov RCX, 10
+    cmp RAX, RCX
+    jle L7
+    sub rsp, 8
+    mov qword[rbp-16], 0
+    mov RBX, 0
+    mov [rbp-16], RBX
+    mov [rbp-16], RBX
+    jmp L8
+L7:
+    mov RAX, 1
+    mov [rbp-16], RAX
+    mov [rbp-16], RAX
+L8:
+    mov RAX, [rbp-16]
+    cmp RAX, 0
+    je L5
+    sub rsp, 4 ; резерв под локальные
+    mov dword[rbp-12], 1
+    mov RCX, 1
+    mov dword[rbp-12], ECX
+L9:
     mov EAX, dword [rbp-12]
     mov RCX, 10
     cmp RAX, RCX
-    jle L13
+    jle L12
     sub rsp, 8
     mov qword[rbp-20], 0
     mov RBX, 0
     mov [rbp-20], RBX
     mov [rbp-20], RBX
-    jmp L14
-L13:
+    jmp L13
+L12:
     mov RAX, 1
     mov [rbp-20], RAX
     mov [rbp-20], RAX
-L14:
+L13:
     mov RAX, [rbp-20]
     cmp RAX, 0
-    je L11
-    sub rsp, 4 ; резерв под локальные
-    mov dword[rbp-16], 1
-    mov RCX, 1
-    mov dword[rbp-16], ECX
-L15:
-    mov EAX, dword [rbp-16]
-    mov RCX, 10
-    cmp RAX, RCX
-    jle L18
-    sub rsp, 8
-    mov qword[rbp-24], 0
-    mov RBX, 0
-    mov [rbp-24], RBX
-    mov [rbp-24], RBX
-    jmp L19
-L18:
-    mov RAX, 1
-    mov [rbp-24], RAX
-    mov [rbp-24], RAX
-L19:
-    mov RAX, [rbp-24]
-    cmp RAX, 0
-    je L16
-    movsd xmm0, [rbp-8]
-    mov ECX, dword [rbp-16]
-    cvtsi2sd xmm2, RCX
-    movsd xmm1, xmm0
-    addsd xmm1, xmm2
-    movsd [rbp-8], xmm1
-L17:
-    mov EAX, dword [rbp-16]
-    mov RCX, 1
-    mov RBX, RAX
-    add RBX, RCX
-    mov dword[rbp-16], EBX
-    jmp L15
-L16:
-L12:
-    sub rsp, 12 ; резерв под локальные
+    je L10
+    mov ECX, dword [rbp-4]
+    mov EBX, dword [rbp-12]
+    mov RDX, RCX
+    add RDX, RBX
+    mov dword[rbp-4], EDX
+L11:
     mov EAX, dword [rbp-12]
     mov RCX, 1
     mov RBX, RAX
     add RBX, RCX
     mov dword[rbp-12], EBX
-    jmp L10
-L11:
+    jmp L9
+L10:
+L6:
+    sub rsp, 12 ; резерв под локальные
+    mov EAX, dword [rbp-8]
+    mov RCX, 1
+    mov RBX, RAX
+    add RBX, RCX
+    mov dword[rbp-8], EBX
+    jmp L4
+L5:
     sub rsp, 4 ; резерв под локальные
-    movsd xmm0, [rbp-8]
+    mov EAX, dword [rbp-4]
+    leave
+    ret
+арифметикаИБулевы:
+    push rbp
+    mov rbp, rsp
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    cmp RDI, RSI
+    jg L18
+    sub rsp, 8
+    mov qword[rbp-20], 0
+    mov RAX, 0
+    mov [rbp-20], RAX
+    mov [rbp-20], RAX
+    jmp L19
+L18:
+    mov RAX, 1
+    mov [rbp-20], RAX
+    mov [rbp-20], RAX
+L19:
+    mov RAX, [rbp-20]
+    cmp RAX, 0
+    je L16
+    mov [rbp-20], RAX
+    cmp RDI, RSI
+    je L20
+    sub rsp, 8
+    mov qword[rbp-28], 0
+    mov RAX, 0
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
+    jmp L21
+L20:
+    mov RAX, 1
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
+L21:
+    mov RAX, [rbp-28]
+    cmp RAX, 0
+    jne L22
+    sub rsp, 8
+    mov qword[rbp-36], 0
+    mov RCX, 1
+    mov [rbp-36], RCX
+    jmp L23
+L22:
+    mov RAX, 0
+    mov [rbp-36], RAX
+L23:
+    mov RAX, [rbp-36]
+    cmp RAX, 0
+    je L16
+    sub rsp, 8
+    mov qword[rbp-44], 0
+    mov RCX, 1
+    mov [rbp-44], RCX
+    jmp L17
+L16:
+    mov RAX, 0
+    mov [rbp-44], RAX
+L17:
+    mov RAX, [rbp-44]
+    cmp RAX, 0
+    je L15
+    sub rsp, 32 ; резерв под локальные
+    mov RCX, RDI
+    add RCX, RSI
+    mov RBX, RDI
+    sub RBX, RSI
+    push RAX
+    mov RAX, RCX
+    imul RAX, RBX
+    mov RDX, RAX
+    pop RAX
+    mov RAX, RDX
+    cqo
+    idiv RSI
+    push RDX
+    cqo
+    idiv RDI
+    mov RCX, RDX
+    pop RDX
+    mov dword[rbp-12], ECX
+    jmp L14
+L15:
+    mov RAX, -1
+    mov dword[rbp-12], EAX
+L14:
+    mov EAX, dword [rbp-12]
     leave
     ret
 логика:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd xmm0, [_8.4]
-    movsd [rbp-8], xmm0
-    movsd xmm0, [_8.0]
-    movsd [rbp-16], xmm0
-    movsd xmm0, [_0.0]
-    movsd [rbp-24], xmm0
-    movsd xmm0, [rbp-8]
-    movsd xmm1, [rbp-16]
-    ucomisd xmm0, xmm1
-    ja L22
+    sub rsp,20
+    mov dword[rbp-12], 7
+    mov qword[rbp-8], RDI
+    mov dword[rbp-16], 7
+    mov dword[rbp-20], 0
+push rax
+push rcx
+push rdx
+push rsi
+push rdi
+push r8
+push r9
+push r10
+push r11
+mov rdi, [rbp-8]
+call strlen
+mov rdx, rax
+mov rax, 1
+mov rdi, 1
+mov rsi, [rbp-8]
+syscall
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rax
+    mov EAX, dword [rbp-12]
+    mov ECX, dword [rbp-16]
+    cmp RAX, RCX
+    jg L26
     sub rsp, 8
-    mov qword[rbp-32], 0
-    mov RAX, 0
-    mov [rbp-32], RAX
-    mov [rbp-32], RAX
-    jmp L23
-L22:
-    mov RAX, 1
-    mov [rbp-32], RAX
-    mov [rbp-32], RAX
-L23:
-    mov RAX, [rbp-32]
-    cmp RAX, 0
-    je L21
-    sub rsp, 8 ; резерв под локальные
-    movsd xmm0, [_1.0]
-    movsd [rbp-24], xmm0
-    leave
-    ret
-    jmp L20
-L21:
-    movsd xmm0, [rbp-8]
-    movsd xmm1, [rbp-16]
-    ucomisd xmm0, xmm1
-    je L25
-    sub rsp, 8
-    mov qword[rbp-32], 0
-    mov RAX, 0
-    mov [rbp-32], RAX
-    mov [rbp-32], RAX
-    jmp L26
-L25:
-    mov RAX, 1
-    mov [rbp-32], RAX
-    mov [rbp-32], RAX
+    mov qword[rbp-28], 0
+    mov RBX, 0
+    mov [rbp-28], RBX
+    mov [rbp-28], RBX
+    jmp L27
 L26:
-    mov RAX, [rbp-32]
+    mov RAX, 1
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
+L27:
+    mov RAX, [rbp-28]
     cmp RAX, 0
-    je L24
+    je L25
     sub rsp, 8 ; резерв под локальные
-    movsd xmm0, [_2.0]
-    movsd [rbp-24], xmm0
+    mov RCX, 1
+    mov dword[rbp-20], ECX
+    mov RAX, RCX
     leave
     ret
-    jmp L20
-L24:
-    movsd xmm0, [_3.0]
-    movsd [rbp-24], xmm0
-    leave
-    ret
-L20:
-    movsd xmm0, [rbp-24]
-    leave
-    ret
-сложноеВычисление:
-    push rbp
-    mov rbp, rsp
-    sub rsp,48
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    movsd [rbp-24], xmm2
-    movsd [rbp-32], xmm3
-    movsd [rbp-40], xmm4
-    movsd xmm5, [_0.0]
-    movsd [rbp-48], xmm5
-    movsd xmm5, [_0.0]
-    ucomisd xmm1, xmm5
-    jne L29
+    jmp L24
+L25:
+    mov EAX, dword [rbp-12]
+    mov ECX, dword [rbp-16]
+    cmp RAX, RCX
+    je L29
     sub rsp, 8
-    mov qword[rbp-56], 0
-    mov RAX, 0
-    mov [rbp-56], RAX
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    movsd [rbp-24], xmm2
-    movsd [rbp-32], xmm3
-    movsd [rbp-40], xmm4
-    mov [rbp-56], RAX
+    mov qword[rbp-28], 0
+    mov RBX, 0
+    mov [rbp-28], RBX
+    mov [rbp-28], RBX
     jmp L30
 L29:
     mov RAX, 1
-    mov [rbp-56], RAX
-    mov [rbp-56], RAX
+    mov [rbp-28], RAX
+    mov [rbp-28], RAX
 L30:
-    mov RAX, [rbp-56]
+    mov RAX, [rbp-28]
     cmp RAX, 0
     je L28
     sub rsp, 8 ; резерв под локальные
-    movsd xmm0, [rbp-8]
-    movsd xmm1, [rbp-16]
-    movsd xmm2, xmm0
-    addsd xmm2, xmm1
-    movsd xmm3, [rbp-24]
-    movsd xmm4, [rbp-32]
-    movsd xmm5, xmm3
-    subsd xmm5, xmm4
-    movsd xmm6, xmm2
-    mulsd xmm6, xmm5
-    movsd xmm7, [rbp-40]
-    movsd xmm0, xmm6
-    divsd xmm0, xmm7
+    mov RCX, 2
+    mov dword[rbp-20], ECX
+    mov RAX, RCX
     leave
     ret
-    jmp L27
+    jmp L24
 L28:
-    movsd xmm0, [_minus1.0]
-    movsd [rbp-48], xmm0
+    mov RAX, 3
+    mov dword[rbp-20], EAX
     leave
     ret
-L27:
-    movsd xmm0, [rbp-48]
+L24:
+    mov EAX, dword [rbp-20]
+    leave
+    ret
+факториал:
+    push rbp
+    mov rbp, rsp
+    sub rsp,4
+    mov dword[rbp-4], EDI
+    mov RAX, 1
+    cmp RDI, RAX
+    je L32
+    sub rsp, 8
+    mov qword[rbp-12], 0
+    mov RCX, 0
+    mov [rbp-12], RCX
+    mov [rbp-12], RCX
+    jmp L33
+L32:
+    mov RAX, 1
+    mov [rbp-12], RAX
+    mov [rbp-12], RAX
+L33:
+    mov RAX, [rbp-12]
+    cmp RAX, 0
+    je L31
+    sub rsp, 8 ; резерв под локальные
+    mov RCX, 1
+    mov RAX, RCX
+    leave
+    ret
+L31:
+    mov RAX, 1
+    mov RCX, RDI
+    sub RCX, RAX
+    mov dword[rbp-4], EDI
+    mov RDI, RCX
+sub rsp, 4
+    call факториал
+    add rsp, 4
+    mov ECX, dword [rbp-4]
+    push RDX
+    imul RAX, RCX
+    mov RBX, RAX
+    pop RDX
+    mov RAX, RBX
     leave
     ret
 сумма:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    pxor xmm2, xmm2
-    movsd [rbp-24], xmm2
-    movsd xmm2, xmm0
-    addsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    mov RAX, RDI
+    add RAX, RSI
     leave
     ret
 разность:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    pxor xmm2, xmm2
-    movsd [rbp-24], xmm2
-    movsd xmm2, xmm0
-    subsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    mov RAX, RDI
+    sub RAX, RSI
     leave
     ret
 умножение:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    pxor xmm2, xmm2
-    movsd [rbp-24], xmm2
-    movsd xmm2, xmm0
-    mulsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    push RDX
+    mov RAX, RDI
+    imul RAX, RSI
+    pop RDX
     leave
     ret
 деление:
     push rbp
     mov rbp, rsp
-    sub rsp,24
-    movsd [rbp-8], xmm0
-    movsd [rbp-16], xmm1
-    pxor xmm2, xmm2
-    movsd [rbp-24], xmm2
-    movsd xmm2, xmm0
-    divsd xmm2, xmm1
-    movsd xmm0, xmm2
+    sub rsp,12
+    mov dword[rbp-4], EDI
+    mov dword[rbp-8], ESI
+    mov dword[rbp-12], 0
+    push RDX
+    mov RAX, RDI
+    cqo
+    idiv RSI
+    pop RDX
     leave
     ret
 _start:
@@ -541,8 +631,8 @@ mov rsi, input_buf
 mov rdx, 100
 syscall
 lea rsi, [input_buf]
-call atof_nasm
-    movsd [пример1], xmm0
+call atoi_nasm
+    mov [пример1], EAX
 pop r11
 pop r10
 pop r9
@@ -567,8 +657,63 @@ mov rsi, input_buf
 mov rdx, 100
 syscall
 lea rsi, [input_buf]
-call atof_nasm
-    movsd [пример2], xmm0
+call atoi_nasm
+    mov [пример2], EAX
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rax
+    mov EDI, [пример1]
+    mov ESI, [пример2]
+sub rsp, 8
+    call сумма
+    add rsp, 8
+push rax
+push rcx
+push rdx
+push rsi
+push rdi
+push r8
+push r9
+push r10
+push r11
+mov rax, 1
+mov rdi, 1
+mov rsi, _SUMM_RESULT_
+mov rdx, 13
+syscall
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rax
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+push rax
+push rcx
+push rdx
+push rsi
+push rdi
+push r8
+push r9
+push r10
+push r11
+mov rax, 1
+mov rdi, 1
+mov rsi, _HELLO_WORDL
+mov rdx, 12
+syscall
 pop r11
 pop r10
 pop r9
@@ -589,8 +734,8 @@ push r10
 push r11
 mov rax, 1
 mov rdi, 1
-mov rsi, _Sum_result_
-mov rdx, 12
+mov rsi, гол
+mov rdx, 11
 syscall
 pop r11
 pop r10
@@ -601,115 +746,105 @@ pop rsi
 pop rdx
 pop rcx
 pop rax
-    movsd xmm0, [пример1]
-    movsd xmm1, [пример2]
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
 sub rsp, 8
     call сумма
     add rsp, 8
-    sub rsp, 8
-    mov qword[rbp-8], 0
-    mov RAX, [rbp-8]
     movsx RAX, EAX
     push RAX
     call print_int
     add rsp, 8
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-sub rsp, 0
-    call сумма
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-sub rsp, 0
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 8
     call разность
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 8
     call умножение
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 8
     call деление
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-    movsd xmm2, [в]
-    movsd xmm3, [г]
-    movsd xmm4, [д]
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov RDI, 10
+sub rsp, 8
+    call факториал
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+    mov EDX, [в]
+    mov ECX, [г]
+    mov R8D, [д]
+sub rsp, 8
     call сложноеВычисление
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+sub rsp, 8
     call цикл_сумма
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [а]
-    movsd xmm1, [б]
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov EDI, [а]
+    mov ESI, [б]
+sub rsp, 8
     call арифметикаИБулевы
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-    movsd xmm0, [_26.0]
-    movsd xmm1, [_22.0]
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov RDI, 25
+    mov RSI, 12
+sub rsp, 8
     call арифметикаИБулевы
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
-sub rsp, 0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
+    mov RDI, гол
+sub rsp, 8
     call логика
-    add rsp, 0
-    mov rdi, fmtGlobal
-    sub rsp, 0
-    mov eax, 1
-    call printf
-    add rsp, 0
-    movsd [результат], xmm0
+    add rsp, 8
+    movsx RAX, EAX
+    push RAX
+    call print_int
+    add rsp, 8
+    mov [результат], EAX
     mov rax, 60
     syscall
