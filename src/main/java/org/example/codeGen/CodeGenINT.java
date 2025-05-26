@@ -265,6 +265,9 @@ public void generateIfTrue(Register r1, Register r2, Instructions instruction) {
 
     @Override
     public void generatePrint(Register reg, String var) {
+        if(!reg.isHasValue()){
+            generateLoad(var, reg);
+        }
         command.add("    movsx "+reg.getName()+", "+reg.getNameLoad(4));
         command.add("    push "+reg.getName());
         command.add("    call print_int");
